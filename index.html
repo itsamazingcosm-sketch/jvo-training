@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Дживио · Обучение</title>
+  <meta name="description" content="Обучение по продуктам Дживио: процессы клиента и их автоматизация.">
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    /* Тост-уведомление */
+    #toast {
+      position: fixed; left: 50%; bottom: 28px; transform: translate(-50%, 20px);
+      background: var(--eggplant); color: #fff; padding: 14px 24px; border-radius: 999px;
+      font-weight: 600; font-size: 15px; box-shadow: var(--shadow-md);
+      opacity: 0; pointer-events: none; transition: opacity .25s, transform .25s; z-index: 80;
+    }
+    #toast.show { opacity: 1; transform: translate(-50%, 0); }
+  </style>
+</head>
+<body>
+
+  <!-- Мобильная шапка -->
+  <div class="topbar">
+    <button class="burger" id="burger" aria-label="Меню">&#9776;</button>
+    <img class="js-home" src="assets/logo/logo-light.svg" alt="Дживио" style="cursor:pointer">
+  </div>
+
+  <div class="app">
+    <!-- Сайдбар -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar__logo js-home">
+        <img src="assets/logo/logo-light.svg" alt="Дживио">
+      </div>
+      <div id="nav"></div>
+    </aside>
+
+    <!-- Контент -->
+    <main class="main">
+      <div class="searchbar">
+        <div class="searchbar__inner">
+          <div class="search-field">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+            <input id="search" type="text" placeholder="Поиск" autocomplete="off" aria-label="Поиск по обучению">
+            <button class="search-clear" id="searchClear" aria-label="Очистить">&times;</button>
+          </div>
+          <div class="search-results" id="searchResults"></div>
+        </div>
+        <button class="grade-mini" id="gradeMini" aria-label="Ваш прогресс"></button>
+      </div>
+      <div class="wrap" id="view"></div>
+    </main>
+  </div>
+
+  <div class="scrim" id="scrim"></div>
+  <div id="toast"></div>
+
+  <script src="content.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
