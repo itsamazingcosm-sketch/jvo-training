@@ -178,3 +178,18 @@ test("/api/day returns the day's collections and the local heart-rate window", a
     await close();
   }
 });
+
+test("/fonts serves the bundled TTF files and rejects other paths", async () => {
+  const { get, close } = await boot({ OURA_ACCESS_TOKEN: "tok" });
+  try {
+    const res = await get("/fonts/Manrope.ttf");
+    assert.equal(res.status, 200);
+    assert.equal(res.headers.get("content-type"), "font/ttf");
+    assert.ok((await res.arrayBuffer()).byteLength > 100_000);
+    assert.equal((await get("/fonts/../package.json")).status, 404);
+    assert.equal((await get("/fonts/nope.ttf")).status, 404);
+    assert.match(await (await get("/")).text(), /url\("\/fonts\/Unbounded\.ttf"\)/);
+  } finally {
+    await close();
+  }
+});

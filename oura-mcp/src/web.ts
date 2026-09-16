@@ -1,6 +1,6 @@
 import { createServer, type IncomingMessage, type Server, type ServerResponse } from "node:http";
 import { createHmac, randomBytes, timingSafeEqual } from "node:crypto";
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { localDayRange, resolveDateRange, todayISO, addDays, isISODate, type OuraConfig } from "./config.js";
@@ -86,9 +86,9 @@ const escapeHtml = (s: string) => s.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", 
 
 function loginPage(error?: string): string {
   return `<!doctype html><html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Кольцо · вход</title>
-<style>body{font-family:"Manrope",system-ui,-apple-system,"Segoe UI",sans-serif;background:#0e1216;color:#f3f4f2;display:grid;place-items:center;min-height:100vh;margin:0}
+<style>@font-face{font-family:"Unbounded";src:url("/fonts/Unbounded.ttf") format("truetype");font-weight:200 900;font-display:swap}@font-face{font-family:"Manrope";src:url("/fonts/Manrope.ttf") format("truetype");font-weight:200 800;font-display:swap}body{font-family:"Manrope",system-ui,-apple-system,"Segoe UI",sans-serif;background:#0e1216;color:#f3f4f2;display:grid;place-items:center;min-height:100vh;margin:0}
 form{display:grid;gap:14px;width:min(340px,90vw);background:#181d22;padding:28px 24px;border-radius:24px}
-h1{font-family:"Playfair Display",Georgia,serif;font-weight:400;font-size:28px;margin:0 0 4px}
+h1{font-family:"Unbounded","Manrope",sans-serif;font-weight:600;font-size:22px;margin:0 0 4px}
 label{font-size:13px;color:#b3b8b5}input,button{font:inherit;padding:12px 14px;border-radius:12px;border:1px solid rgba(255,255,255,.1);background:#20262c;color:#f3f4f2;width:100%;box-sizing:border-box;margin-top:6px}
 button{background:#f3f4f2;color:#0e1216;border:0;cursor:pointer;font-weight:600}.err{color:#e06a6a;font-size:14px}</style></head>
 <body><form method="post" action="/login"><h1>Кольцо</h1><label>Пароль<input type="password" name="password" autofocus required></label>${
@@ -138,6 +138,16 @@ export function createWebServer(config: OuraConfig, opts: WebOptions = {}): Serv
     try {
       if (path === "/healthz") return sendJson(res, 200, { ok: true });
 
+      // ----- static: self-hosted fonts (нужны и странице входа) -----
+      if (path.startsWith("/fonts/")) {
+        const name = path.slice("/fonts/".length);
+        if (!/^[A-Za-z0-9_-]+\.(ttf|woff2?)$/.test(name)) return void res.writeHead(404).end();
+        const file = join(publicDir, "fonts", name);
+        if (!existsSync(file)) return void res.writeHead(404).end();
+        const type = name.endsWith(".woff2") ? "font/woff2" : name.endsWith(".woff") ? "font/woff" : "font/ttf";
+        res.writeHead(200, { "Content-Type": type, "Cache-Control": "public, max-age=31536000, immutable" });
+        return void res.end(readFileSync(file));
+      }
       // ----- password gate -----
       if (path === "/login") {
         if (!config.dashboardPassword) return redirect(res, "/");
