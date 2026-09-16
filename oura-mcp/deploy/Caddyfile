@@ -1,0 +1,5 @@
+# Используется контейнером caddy из docker-compose.yml. DOMAIN задаётся в .env
+{$DOMAIN} {
+    encode gzip
+    reverse_proxy oura:8484
+}

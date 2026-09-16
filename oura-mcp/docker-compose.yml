@@ -8,8 +8,28 @@ services:
       OURA_TOKEN_PATH: /data/tokens.json
     volumes:
       - oura-data:/data
+    # Локальный порт для отладки и для своего reverse proxy на хосте.
     ports:
       - "127.0.0.1:8484:8484"
 
+  # HTTPS-фронт. Домен берётся из DOMAIN в .env, сертификат Let's Encrypt выпускается сам.
+  # Если у вас уже есть свой nginx/Caddy на хосте, запускайте только oura: docker compose up -d oura
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    depends_on:
+      - oura
+    env_file: .env
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    volumes:
+      - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+
 volumes:
   oura-data:
+  caddy-data:
+  caddy-config:

@@ -103,6 +103,7 @@ Scopes по умолчанию: `personal daily heartrate workout session tag sp
 | `OURA_TOKEN_PATH` | Где хранить токены, по умолчанию `~/.oura-mcp/tokens.json` |
 | `OURA_TIMEZONE` | IANA-зона для «сегодня», например `Europe/Moscow` |
 | `PUBLIC_URL` | Публичный адрес дашборда; redirect URI = `PUBLIC_URL/callback` |
+| `DOMAIN` | Домен для контейнера Caddy из docker-compose |
 | `DASHBOARD_PASSWORD` | Пароль входа на дашборд |
 | `SESSION_SECRET` | Секрет подписи cookie сессии |
 | `PORT` | Порт веб-сервера, по умолчанию 8484 |
@@ -144,49 +145,48 @@ DASHBOARD_PASSWORD=секрет OURA_CLIENT_ID=... OURA_CLIENT_SECRET=... npm ru
 # открыть http://localhost:8484 -> ввести пароль -> «Подключить Oura»
 ```
 
-### На сервере одной командой
+### На VPS Beget (или любом Ubuntu / Debian) одной командой
 
-Нужен VPS на Ubuntu / Debian и домен, A-запись которого указывает на сервер (например `oura.example.com`).
-Порты 80 и 443 должны быть открыты. На сервере:
+1. **Создайте VPS** в панели Beget: образ Ubuntu 24.04 (подойдёт и готовый образ «Docker» из маркетплейса),
+   минимальный тариф хватит. Вход по SSH под `root`, пароль или ключ придут в панели.
+2. **Домен.** В разделе DNS Beget добавьте A-запись, например `oura.вашдомен.ru` → IP сервера. Если домен
+   у другого регистратора, A-запись делается там. Подождите несколько минут, пока запись разойдётся.
+3. **Приложение Oura** на [cloud.ouraring.com/oauth/applications](https://cloud.ouraring.com/oauth/applications):
+   в Redirect URIs укажите `https://oura.вашдомен.ru/callback`, скопируйте Client ID и Client Secret.
+4. **На сервере** (по SSH):
+
+   ```bash
+   curl -fsSL https://raw.githubusercontent.com/itsamazingcosm-sketch/jvo-training/claude/oura-mcp-server-p9ukul/oura-mcp/deploy/install.sh | bash
+   ```
+
+   Скрипт спросит домен, Client ID / Secret, пароль для входа и часовой пояс, затем:
+   поставит Docker из репозитория Ubuntu (сайт Docker из России недоступен), подключит зеркала Docker Hub
+   (`dockerhub1.beget.com`, `dockerhub.timeweb.cloud`, `mirror.gcr.io`), скачает код в `/opt/oura`,
+   соберёт образ и поднимет два контейнера: дашборд и Caddy с автоматическим HTTPS-сертификатом.
+   Повторный запуск той же команды обновляет код.
+5. Откройте `https://oura.вашдомен.ru`, введите пароль, нажмите «Подключить Oura», разрешите доступ.
+
+Файлы: настройки в `/opt/oura/jvo-training/oura-mcp/.env`, токены Oura и сертификаты в volume Docker.
+Логи: `cd /opt/oura/jvo-training/oura-mcp && docker compose logs -f`.
+
+Если Docker Hub всё же не тянется (ошибка `pull access denied` или таймаут на `node:22-alpine`), проверьте
+`/etc/docker/daemon.json` (там должны быть зеркала из `deploy/daemon.json`) и выполните
+`systemctl restart docker`.
+
+### Вручную (Docker Compose)
+
+То же самое руками на сервере с Docker:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/itsamazingcosm-sketch/jvo-training/claude/oura-mcp-server-p9ukul/oura-mcp/deploy/install.sh | bash
+git clone https://github.com/itsamazingcosm-sketch/jvo-training.git && cd jvo-training/oura-mcp
+cp .env.example .env
+# заполнить: DOMAIN, PUBLIC_URL=https://$DOMAIN, OURA_CLIENT_ID, OURA_CLIENT_SECRET,
+#            DASHBOARD_PASSWORD, SESSION_SECRET (openssl rand -hex 32), OURA_TIMEZONE
+docker compose up -d --build          # дашборд + Caddy (порты 80/443)
+docker compose up -d --build oura     # только дашборд на 127.0.0.1:8484, если HTTPS делает ваш nginx/Caddy
 ```
 
-Скрипт поставит Docker и Caddy, скачает код в `/opt/oura`, спросит домен, Client ID / Secret и пароль,
-соберёт контейнер и выпустит HTTPS-сертификат. Повторный запуск той же команды обновляет код.
-После установки добавьте в приложении Oura Redirect URI `https://oura.example.com/callback`, откройте
-сайт, введите пароль и нажмите «Подключить Oura».
-
-### На сервере вручную (Docker + Caddy)
-
-Тот же результат руками.
-
-1. В настройках приложения Oura ([cloud.ouraring.com/oauth/applications](https://cloud.ouraring.com/oauth/applications))
-   добавьте Redirect URI `https://oura.example.com/callback`.
-2. На сервере:
-
-   ```bash
-   git clone <этот репозиторий> && cd jvo-training/oura-mcp
-   cp .env.example .env
-   # заполнить: OURA_CLIENT_ID, OURA_CLIENT_SECRET, PUBLIC_URL=https://oura.example.com,
-   #            DASHBOARD_PASSWORD, SESSION_SECRET (например: openssl rand -hex 32), OURA_TIMEZONE
-   docker compose up -d --build
-   ```
-
-   Контейнер слушает только `127.0.0.1:8484`, токены Oura лежат в volume `oura-data`.
-3. HTTPS через Caddy (сертификат выпустится сам):
-
-   ```bash
-   sudo apt install caddy
-   sed 's/oura.example.com/ВАШ_ДОМЕН/' Caddyfile.example | sudo tee /etc/caddy/Caddyfile
-   sudo systemctl reload caddy
-   ```
-
-4. Откройте `https://oura.example.com`, введите пароль, нажмите «Подключить Oura» и разрешите доступ.
-   Дальше токены обновляются сами, дашборд доступен по ссылке с любого устройства.
-
-Обновление: `git pull && docker compose up -d --build`. Логи: `docker compose logs -f`.
+Для своего прокси на хосте есть `Caddyfile.example`. Обновление: `git pull && docker compose up -d --build`.
 
 Тот же образ можно запустить на Railway, Render, Fly.io и подобных: укажите переменные из `.env.example`,
 примонтируйте volume в `/data` (или задайте `OURA_TOKEN_PATH`), а `PUBLIC_URL` поставьте равным выданному
