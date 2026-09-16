@@ -222,8 +222,11 @@ footer{margin-top:20px;font-size:12px;color:var(--muted)}
       let d = '', started = false;
       pts[si].forEach((p) => { if (!p) { started = false; return; } d += (started ? 'L' : 'M') + p[0] + ' ' + p[1]; started = true; });
       if (opts.area && series.length === 1) {
-        const first = pts[si].find(Boolean), lastp = [...pts[si]].reverse().find(Boolean);
-        if (first && lastp) svg.appendChild(el('path', { d: d + `L${lastp[0]} ${f.y(f.lo)}L${first[0]} ${f.y(f.lo)}Z`, fill: css('--wash'), stroke: 'none' }));
+        // one closed shape per contiguous run of points, so a gap stays a gap
+        let seg = [];
+        const flush = () => { if (seg.length > 1) svg.appendChild(el('path', { d: 'M' + seg.map((p) => p[0] + ' ' + p[1]).join('L') + `L${seg[seg.length - 1][0]} ${f.y(f.lo)}L${seg[0][0]} ${f.y(f.lo)}Z`, fill: css('--wash'), stroke: 'none' })); seg = []; };
+        pts[si].forEach((p) => { if (p) seg.push(p); else flush(); });
+        flush();
       }
       svg.appendChild(el('path', { d, fill: 'none', stroke: color, 'stroke-width': 2, 'stroke-linejoin': 'round', 'stroke-linecap': 'round' }));
       // single points (no neighbours) still need a mark
