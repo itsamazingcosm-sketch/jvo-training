@@ -49,7 +49,7 @@ test("password gate: redirects, rejects wrong password, accepts the right one", 
     assert.match(cookie, /^oura_dash=/);
     const page = await get("/", { headers: { cookie } });
     assert.equal(page.status, 200);
-    assert.match(await page.text(), /Oura · Дашборд/);
+    assert.match(await page.text(), /Кольцо · Дашборд/);
     const out = await get("/logout", { headers: { cookie } });
     assert.match(out.headers.get("set-cookie") ?? "", /Max-Age=0/);
   } finally {
