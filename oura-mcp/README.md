@@ -144,9 +144,23 @@ DASHBOARD_PASSWORD=секрет OURA_CLIENT_ID=... OURA_CLIENT_SECRET=... npm ru
 # открыть http://localhost:8484 -> ввести пароль -> «Подключить Oura»
 ```
 
-### На сервере (Docker + Caddy)
+### На сервере одной командой
 
-Нужен любой VPS с Docker и доменом, направленным на него (например `oura.example.com`).
+Нужен VPS на Ubuntu / Debian и домен, A-запись которого указывает на сервер (например `oura.example.com`).
+Порты 80 и 443 должны быть открыты. На сервере:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/itsamazingcosm-sketch/jvo-training/claude/oura-mcp-server-p9ukul/oura-mcp/deploy/install.sh | bash
+```
+
+Скрипт поставит Docker и Caddy, скачает код в `/opt/oura`, спросит домен, Client ID / Secret и пароль,
+соберёт контейнер и выпустит HTTPS-сертификат. Повторный запуск той же команды обновляет код.
+После установки добавьте в приложении Oura Redirect URI `https://oura.example.com/callback`, откройте
+сайт, введите пароль и нажмите «Подключить Oura».
+
+### На сервере вручную (Docker + Caddy)
+
+Тот же результат руками.
 
 1. В настройках приложения Oura ([cloud.ouraring.com/oauth/applications](https://cloud.ouraring.com/oauth/applications))
    добавьте Redirect URI `https://oura.example.com/callback`.
