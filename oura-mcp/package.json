@@ -19,6 +19,7 @@
     "start": "node dist/index.js",
     "auth": "node dist/index.js auth",
     "status": "node dist/index.js status",
+    "web": "node dist/index.js web",
     "dev": "tsc -p tsconfig.json --watch",
     "test": "tsc -p tsconfig.test.json && node --test \"build-test/test/**/*.test.js\"",
     "typecheck": "tsc -p tsconfig.json --noEmit"

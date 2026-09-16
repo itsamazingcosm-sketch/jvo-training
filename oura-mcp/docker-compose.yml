@@ -1,0 +1,15 @@
+services:
+  oura:
+    build: .
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      PORT: "8484"
+      OURA_TOKEN_PATH: /data/tokens.json
+    volumes:
+      - oura-data:/data
+    ports:
+      - "127.0.0.1:8484:8484"
+
+volumes:
+  oura-data:

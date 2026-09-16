@@ -4,6 +4,7 @@ import { loadConfig, OURA_APPLICATIONS_URL } from "./config.js";
 import { createTokenProvider, runAuthFlow, TokenStore } from "./auth.js";
 import { OuraClient } from "./oura-client.js";
 import { createOuraServer, SERVER_NAME, SERVER_VERSION } from "./server.js";
+import { startWebServer } from "./web.js";
 
 const USAGE = `${SERVER_NAME} ${SERVER_VERSION}
 
@@ -12,6 +13,7 @@ Usage:
   oura-mcp serve      same as above
   oura-mcp auth       run the OAuth2 flow and store tokens (needs OURA_CLIENT_ID / OURA_CLIENT_SECRET)
   oura-mcp status     show which credentials are in use and call /v2/usercollection/personal_info
+  oura-mcp web        serve the web dashboard (PORT, PUBLIC_URL, DASHBOARD_PASSWORD, SESSION_SECRET)
   oura-mcp help       this text
 
 Env: OURA_ACCESS_TOKEN | OURA_CLIENT_ID + OURA_CLIENT_SECRET (+ OURA_REDIRECT_URI, OURA_SCOPES, OURA_TOKEN_PATH), OURA_TIMEZONE
@@ -20,7 +22,7 @@ Create an OAuth app at ${OURA_APPLICATIONS_URL}
 
 async function serve(): Promise<void> {
   const config = loadConfig();
-  const client = new OuraClient(createTokenProvider(config));
+  const client = new OuraClient(createTokenProvider(config), { baseUrl: config.apiBase });
   const server = createOuraServer(client, { timezone: config.timezone });
   const transport = new StdioServerTransport();
   await server.connect(transport);
@@ -51,13 +53,18 @@ async function status(): Promise<void> {
       `Token file: scope=${stored.scope ?? "?"}, expires=${stored.expires_at ? new Date(stored.expires_at * 1000).toISOString() : "?"}, refresh_token=${stored.refresh_token ? "yes" : "no"}`,
     );
   }
-  const client = new OuraClient(provider);
+  const client = new OuraClient(provider, { baseUrl: config.apiBase });
   const info = await client.get("/v2/usercollection/personal_info");
   console.log(JSON.stringify(info, null, 2));
 }
 
+async function web(): Promise<void> {
+  const config = loadConfig();
+  await startWebServer(config);
+}
+
 const cmd = process.argv[2] ?? "serve";
-const run: Record<string, () => Promise<void>> = { serve, auth, status };
+const run: Record<string, () => Promise<void>> = { serve, auth, status, web };
 if (cmd === "help" || cmd === "--help" || cmd === "-h") {
   console.error(USAGE);
 } else if (run[cmd]) {

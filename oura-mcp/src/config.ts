@@ -18,6 +18,13 @@ export interface OuraConfig {
   scopes: string;
   tokenPath: string;
   timezone?: string;
+  /** Override for tests / mocks, default https://api.ouraring.com */
+  apiBase: string;
+  /** Web dashboard */
+  port: number;
+  publicUrl?: string;
+  dashboardPassword?: string;
+  sessionSecret?: string;
 }
 
 export function expandHome(p: string): string {
@@ -32,15 +39,23 @@ function clean(v: string | undefined): string | undefined {
 }
 
 export function loadConfig(env: NodeJS.ProcessEnv = process.env): OuraConfig {
+  const publicUrl = clean(env.PUBLIC_URL)?.replace(/\/+$/, "");
+  const port = Number(clean(env.PORT) ?? 8484);
+  const defaultRedirect = publicUrl ? `${publicUrl}/callback` : port === 8484 ? DEFAULT_REDIRECT_URI : `http://localhost:${port}/callback`;
   return {
     accessToken: clean(env.OURA_ACCESS_TOKEN) ?? clean(env.OURA_TOKEN),
     refreshToken: clean(env.OURA_REFRESH_TOKEN),
     clientId: clean(env.OURA_CLIENT_ID),
     clientSecret: clean(env.OURA_CLIENT_SECRET),
-    redirectUri: clean(env.OURA_REDIRECT_URI) ?? DEFAULT_REDIRECT_URI,
+    redirectUri: clean(env.OURA_REDIRECT_URI) ?? defaultRedirect,
+    port: Number.isFinite(port) && port > 0 ? port : 8484,
+    publicUrl,
+    dashboardPassword: clean(env.DASHBOARD_PASSWORD),
+    sessionSecret: clean(env.SESSION_SECRET),
     scopes: clean(env.OURA_SCOPES) ?? DEFAULT_SCOPES,
     tokenPath: expandHome(clean(env.OURA_TOKEN_PATH) ?? "~/.oura-mcp/tokens.json"),
     timezone: clean(env.OURA_TIMEZONE),
+    apiBase: clean(env.OURA_API_BASE) ?? OURA_API_BASE,
   };
 }
 

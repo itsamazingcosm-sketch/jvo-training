@@ -7,6 +7,9 @@
 
 Стек: Node.js 20+, TypeScript, `@modelcontextprotocol/sdk`, без других зависимостей. Транспорт stdio.
 
+В комплекте веб-дашборд (`npm run web`): страница с KPI, графиками готовности, сна, HRV, пульса покоя, фаз сна,
+тренировок и стресса, таблицей по дням и входом по паролю. Разворачивается на сервере в Docker, см. ниже.
+
 ## Что умеет
 
 | Инструмент | Что возвращает |
@@ -99,6 +102,10 @@ Scopes по умолчанию: `personal daily heartrate workout session tag sp
 | `OURA_SCOPES` | Scopes через пробел |
 | `OURA_TOKEN_PATH` | Где хранить токены, по умолчанию `~/.oura-mcp/tokens.json` |
 | `OURA_TIMEZONE` | IANA-зона для «сегодня», например `Europe/Moscow` |
+| `PUBLIC_URL` | Публичный адрес дашборда; redirect URI = `PUBLIC_URL/callback` |
+| `DASHBOARD_PASSWORD` | Пароль входа на дашборд |
+| `SESSION_SECRET` | Секрет подписи cookie сессии |
+| `PORT` | Порт веб-сервера, по умолчанию 8484 |
 
 ## Подключение к Claude
 
@@ -125,6 +132,56 @@ claude mcp add oura -e OURA_CLIENT_ID=... -e OURA_CLIENT_SECRET=... -- node /а�
 - «Какая нагрузка была на этой неделе по типам тренировок?» → `oura_workouts` или блок `training_load` в дашборде
 - «Утренний брифинг» → промпт `oura_morning_briefing`
 
+## Веб-дашборд по ссылке
+
+Команда `oura-mcp web` поднимает HTTP-сервер: страница `/` с графиками, `/api/dashboard` с теми же
+данными в JSON, `/login` с паролем, `/connect` для привязки аккаунта Oura через OAuth прямо из браузера.
+
+Локально:
+
+```bash
+DASHBOARD_PASSWORD=секрет OURA_CLIENT_ID=... OURA_CLIENT_SECRET=... npm run web
+# открыть http://localhost:8484 -> ввести пароль -> «Подключить Oura»
+```
+
+### На сервере (Docker + Caddy)
+
+Нужен любой VPS с Docker и доменом, направленным на него (например `oura.example.com`).
+
+1. В настройках приложения Oura ([cloud.ouraring.com/oauth/applications](https://cloud.ouraring.com/oauth/applications))
+   добавьте Redirect URI `https://oura.example.com/callback`.
+2. На сервере:
+
+   ```bash
+   git clone <этот репозиторий> && cd jvo-training/oura-mcp
+   cp .env.example .env
+   # заполнить: OURA_CLIENT_ID, OURA_CLIENT_SECRET, PUBLIC_URL=https://oura.example.com,
+   #            DASHBOARD_PASSWORD, SESSION_SECRET (например: openssl rand -hex 32), OURA_TIMEZONE
+   docker compose up -d --build
+   ```
+
+   Контейнер слушает только `127.0.0.1:8484`, токены Oura лежат в volume `oura-data`.
+3. HTTPS через Caddy (сертификат выпустится сам):
+
+   ```bash
+   sudo apt install caddy
+   sed 's/oura.example.com/ВАШ_ДОМЕН/' Caddyfile.example | sudo tee /etc/caddy/Caddyfile
+   sudo systemctl reload caddy
+   ```
+
+4. Откройте `https://oura.example.com`, введите пароль, нажмите «Подключить Oura» и разрешите доступ.
+   Дальше токены обновляются сами, дашборд доступен по ссылке с любого устройства.
+
+Обновление: `git pull && docker compose up -d --build`. Логи: `docker compose logs -f`.
+
+Тот же образ можно запустить на Railway, Render, Fly.io и подобных: укажите переменные из `.env.example`,
+примонтируйте volume в `/data` (или задайте `OURA_TOKEN_PATH`), а `PUBLIC_URL` поставьте равным выданному
+адресу. Без volume токены пропадут при перезапуске и придётся заново нажимать «Подключить Oura».
+
+Что важно для безопасности: `DASHBOARD_PASSWORD` обязателен, если сервер виден из интернета; `SESSION_SECRET`
+нужен, чтобы сессии переживали рестарт; наружу ничего кроме HTTPS-порта не открывайте. Внутри дашборда
+токены Oura никогда не отдаются в браузер, все запросы к Oura идут с сервера.
+
 ## Ограничения и заметки
 
 - Oura ограничивает частоту запросов (порядка 5000 запросов за 5 минут). Сервер повторяет запросы при 429 и
@@ -145,4 +202,5 @@ npm run dev       # tsc --watch
 
 Структура: `src/config.ts` (env и даты), `src/auth.ts` (хранилище токенов, OAuth2, провайдеры),
 `src/oura-client.ts` (HTTP, ретраи, пагинация), `src/summaries.ts` (агрегация для дашборда),
-`src/server.ts` (инструменты и промпты MCP), `src/index.ts` (CLI: serve / auth / status).
+`src/server.ts` (инструменты и промпты MCP), `src/web.ts` (веб-дашборд и OAuth в браузере),
+`public/index.html` (страница дашборда, без внешних библиотек), `src/index.ts` (CLI: serve / auth / status / web).

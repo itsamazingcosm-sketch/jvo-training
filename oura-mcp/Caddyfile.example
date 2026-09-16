@@ -1,0 +1,5 @@
+# HTTPS reverse proxy for the dashboard. Replace the domain, then:
+#   sudo cp Caddyfile.example /etc/caddy/Caddyfile && sudo systemctl reload caddy
+oura.example.com {
+    reverse_proxy 127.0.0.1:8484
+}

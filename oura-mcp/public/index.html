@@ -1,0 +1,434 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Oura · Дашборд</title>
+<style>
+:root{
+  color-scheme:light;
+  --page:#f9f9f7;--surface:#fcfcfb;--ink:#0b0b0b;--ink2:#52514e;--muted:#898781;--grid:#e1e0d9;--axis:#c3c2b7;--border:rgba(11,11,11,.10);
+  --s1:#2a78d6;--s2:#eb6834;--s3:#1baf7a;--deemph:#c3c2b7;--good:#006300;--bad:#d03b3b;--wash:rgba(42,120,214,.10);
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  color-scheme:dark;--page:#0d0d0d;--surface:#1a1a19;--ink:#fff;--ink2:#c3c2b7;--muted:#898781;--grid:#2c2c2a;--axis:#383835;--border:rgba(255,255,255,.10);
+  --s1:#3987e5;--s2:#d95926;--s3:#199e70;--deemph:#383835;--good:#0ca30c;--bad:#e66767;--wash:rgba(57,135,229,.10);
+}}
+:root[data-theme="dark"]{
+  color-scheme:dark;--page:#0d0d0d;--surface:#1a1a19;--ink:#fff;--ink2:#c3c2b7;--muted:#898781;--grid:#2c2c2a;--axis:#383835;--border:rgba(255,255,255,.10);
+  --s1:#3987e5;--s2:#d95926;--s3:#199e70;--deemph:#383835;--good:#0ca30c;--bad:#e66767;--wash:rgba(57,135,229,.10);
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--page);color:var(--ink);font:15px/1.4 system-ui,-apple-system,"Segoe UI",sans-serif}
+a{color:var(--s1)}
+.wrap{max-width:1200px;margin:0 auto;padding:16px}
+header{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:12px}
+header h1{font-size:20px;margin:0;font-weight:600}
+header .spacer{flex:1}
+.status{font-size:13px;color:var(--ink2)}
+button,select,input{font:inherit;color:var(--ink);background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:6px 10px}
+button{cursor:pointer}
+button.primary{background:var(--s1);color:#fff;border-color:transparent}
+.filters{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:8px 0 16px}
+.seg{display:inline-flex;border:1px solid var(--border);border-radius:8px;overflow:hidden;background:var(--surface)}
+.seg button{border:0;border-radius:0;background:transparent;padding:6px 12px}
+.seg button[aria-pressed="true"]{background:var(--ink);color:var(--surface);font-weight:600}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:16px}
+.tile{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:12px 14px;display:grid;gap:4px}
+.tile .label{font-size:13px;color:var(--ink2)}
+.tile .value{font-size:28px;font-weight:600;line-height:1.1}
+.tile .value small{font-size:14px;font-weight:400;color:var(--ink2);margin-left:4px}
+.tile .delta{font-size:13px;color:var(--ink2)}
+.tile .delta.up{color:var(--good)}.tile .delta.down{color:var(--bad)}
+.tile svg{width:100%;height:28px;display:block;margin-top:4px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,440px),1fr));gap:12px}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px;position:relative;min-width:0}
+.card h2{font-size:15px;font-weight:600;margin:0 0 2px}
+.card .sub{font-size:13px;color:var(--ink2);margin-bottom:8px}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:13px;color:var(--ink2);margin-bottom:6px}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.legend i{display:inline-block;width:14px;height:3px;border-radius:2px}
+.legend i.rect{width:10px;height:10px;border-radius:2px}
+.chart{width:100%;height:220px;display:block}
+.chart text{fill:var(--muted);font-size:11px}
+.chart .grid line{stroke:var(--grid);stroke-width:1}
+.chart .axis{stroke:var(--axis);stroke-width:1}
+.chart .lbl{fill:var(--ink2);font-size:11px;font-weight:600}
+.chart .xhair{stroke:var(--axis);stroke-width:1;pointer-events:none}
+.chart .hit{fill:transparent}
+.chart .bar:hover,.chart .bar.on{filter:brightness(1.15)}
+.tip{position:fixed;z-index:10;pointer-events:none;background:var(--surface);color:var(--ink);border:1px solid var(--border);border-radius:8px;padding:8px 10px;font-size:13px;box-shadow:0 4px 16px rgba(0,0,0,.15);display:none;min-width:140px}
+.tip .d{color:var(--ink2);margin-bottom:4px}
+.tip .r{display:flex;align-items:center;gap:8px}
+.tip .r i{width:12px;height:3px;border-radius:2px;display:inline-block}
+.tip .r b{font-weight:600;min-width:44px}
+.tip .r span{color:var(--ink2)}
+.loading .card,.loading .tile{opacity:.5;transition:opacity .2s}
+.empty{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:32px;text-align:center;display:grid;gap:12px;justify-items:center}
+table{width:100%;border-collapse:collapse;font-size:13px;font-variant-numeric:tabular-nums}
+th,td{padding:6px 8px;text-align:right;border-bottom:1px solid var(--grid);white-space:nowrap}
+th:first-child,td:first-child{text-align:left}
+th{color:var(--ink2);font-weight:600;position:sticky;top:0;background:var(--surface)}
+.tablewrap{overflow:auto;max-height:70vh}
+.hidden{display:none}
+.warn{font-size:13px;color:var(--ink2);margin-top:12px}
+footer{margin-top:20px;font-size:12px;color:var(--muted)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Oura · Дашборд</h1>
+    <span class="status" id="status">…</span>
+    <span class="spacer"></span>
+    <button id="theme" title="Тема">◐</button>
+    <a href="/logout" id="logout" class="hidden" style="font-size:13px">Выйти</a>
+  </header>
+
+  <div class="filters" id="filters">
+    <div class="seg" id="range">
+      <button data-days="7">7 дней</button>
+      <button data-days="14" aria-pressed="true">14 дней</button>
+      <button data-days="30">30 дней</button>
+      <button data-days="90">90 дней</button>
+    </div>
+    <label style="font-size:13px;color:var(--ink2)">до <input type="date" id="end"></label>
+    <button id="reload">Обновить</button>
+    <span class="spacer"></span>
+    <div class="seg" id="view">
+      <button data-view="charts" aria-pressed="true">Графики</button>
+      <button data-view="table">Таблица</button>
+    </div>
+  </div>
+
+  <div id="empty" class="empty hidden"></div>
+
+  <div id="content">
+    <div class="kpis" id="kpis"></div>
+    <div class="grid" id="charts">
+      <div class="card"><h2>Готовность и сон</h2><div class="sub">Баллы 0–100</div><div class="legend" id="lg-scores"></div><svg class="chart" id="c-scores"></svg></div>
+      <div class="card"><h2>HRV во сне</h2><div class="sub">Средний RMSSD, мс · серая линия — среднее за период</div><svg class="chart" id="c-hrv"></svg></div>
+      <div class="card"><h2>Пульс покоя</h2><div class="sub">Минимальный пульс за ночь, уд/мин · серая линия — среднее</div><svg class="chart" id="c-rhr"></svg></div>
+      <div class="card"><h2>Фазы сна</h2><div class="sub">Часы за основной сон</div><div class="legend" id="lg-sleep"></div><svg class="chart" id="c-sleep"></svg></div>
+      <div class="card"><h2>Тренировки</h2><div class="sub">Минуты за день, все тренировки</div><svg class="chart" id="c-load"></svg></div>
+      <div class="card"><h2>Стресс и восстановление</h2><div class="sub">Минуты в день</div><div class="legend" id="lg-stress"></div><svg class="chart" id="c-stress"></svg></div>
+    </div>
+    <div class="card hidden" id="tablecard"><h2>Данные по дням</h2><div class="tablewrap"><table id="table"></table></div></div>
+    <div class="warn" id="warn"></div>
+  </div>
+  <footer id="foot"></footer>
+</div>
+<div class="tip" id="tip"></div>
+
+<script>
+(() => {
+  const $ = (s) => document.querySelector(s);
+  const fmt = (v, d = 0) => (v === null || v === undefined || Number.isNaN(v)) ? '–' : Number(v).toLocaleString('ru-RU', { maximumFractionDigits: d, minimumFractionDigits: 0 });
+  const dstr = (iso) => { const [y, m, d] = iso.split('-'); return `${d}.${m}`; };
+  const dfull = (iso) => new Date(iso + 'T00:00:00').toLocaleDateString('ru-RU', { weekday: 'short', day: 'numeric', month: 'long' });
+  const css = (n) => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+
+  // ---- theme ----
+  let theme = null;
+  try { theme = localStorage.getItem('theme'); } catch {}
+  if (theme) document.documentElement.dataset.theme = theme;
+  $('#theme').onclick = () => {
+    const cur = document.documentElement.dataset.theme || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+    const next = cur === 'dark' ? 'light' : 'dark';
+    document.documentElement.dataset.theme = next;
+    try { localStorage.setItem('theme', next); } catch {}
+    if (state.data) render(state.data);
+  };
+
+  // ---- state & filters ----
+  const state = { days: 14, end: '', view: 'charts', data: null };
+  try { state.days = Number(localStorage.getItem('days')) || 14; } catch {}
+  for (const b of $('#range').querySelectorAll('button')) {
+    b.setAttribute('aria-pressed', String(Number(b.dataset.days) === state.days));
+    b.onclick = () => { state.days = Number(b.dataset.days); try { localStorage.setItem('days', state.days); } catch {}; for (const x of $('#range').querySelectorAll('button')) x.setAttribute('aria-pressed', String(x === b)); load(); };
+  }
+  $('#end').onchange = (e) => { state.end = e.target.value; load(); };
+  $('#reload').onclick = load;
+  for (const b of $('#view').querySelectorAll('button')) {
+    b.onclick = () => { state.view = b.dataset.view; for (const x of $('#view').querySelectorAll('button')) x.setAttribute('aria-pressed', String(x === b)); applyView(); };
+  }
+  function applyView() {
+    $('#charts').classList.toggle('hidden', state.view !== 'charts');
+    $('#kpis').classList.toggle('hidden', state.view !== 'charts');
+    $('#tablecard').classList.toggle('hidden', state.view !== 'table');
+  }
+
+  // ---- tooltip ----
+  const tip = $('#tip');
+  function showTip(x, y, title, rows) {
+    tip.replaceChildren();
+    const d = document.createElement('div'); d.className = 'd'; d.textContent = title; tip.appendChild(d);
+    for (const r of rows) {
+      const row = document.createElement('div'); row.className = 'r';
+      const i = document.createElement('i'); i.style.background = r.color; row.appendChild(i);
+      const b = document.createElement('b'); b.textContent = r.value; row.appendChild(b);
+      const s = document.createElement('span'); s.textContent = r.name; row.appendChild(s);
+      tip.appendChild(row);
+    }
+    tip.style.display = 'block';
+    const w = tip.offsetWidth, h = tip.offsetHeight;
+    tip.style.left = Math.min(x + 14, innerWidth - w - 8) + 'px';
+    tip.style.top = Math.min(y + 14, innerHeight - h - 8) + 'px';
+  }
+  const hideTip = () => { tip.style.display = 'none'; };
+
+  // ---- chart primitives ----
+  const NS = 'http://www.w3.org/2000/svg';
+  const el = (tag, attrs = {}, text) => { const e = document.createElementNS(NS, tag); for (const [k, v] of Object.entries(attrs)) e.setAttribute(k, v); if (text !== undefined) e.textContent = text; return e; };
+  const niceTicks = (min, max, n = 4) => {
+    if (!(max > min)) { max = min + 1; }
+    const raw = (max - min) / n, p = 10 ** Math.floor(Math.log10(raw)), f = raw / p;
+    const step = (f <= 1 ? 1 : f <= 2 ? 2 : f <= 5 ? 5 : 10) * p;
+    const lo = Math.floor(min / step) * step, hi = Math.ceil(max / step) * step;
+    const t = []; for (let v = lo; v <= hi + 1e-9; v += step) t.push(+v.toFixed(6));
+    return { lo, hi, ticks: t };
+  };
+  function frame(svg, days, yDomain, opts = {}) {
+    svg.replaceChildren();
+    const W = svg.clientWidth || 500, H = svg.clientHeight || 220;
+    const m = { l: 36, r: opts.right ?? 12, t: 10, b: 24 };
+    const { lo, hi, ticks } = niceTicks(yDomain[0], yDomain[1]);
+    const x = (i) => m.l + (days.length <= 1 ? (W - m.l - m.r) / 2 : (i * (W - m.l - m.r)) / (days.length - 1));
+    const xb = (i) => m.l + ((i + 0.5) * (W - m.l - m.r)) / days.length;
+    const y = (v) => m.t + (H - m.t - m.b) * (1 - (v - lo) / (hi - lo || 1));
+    const g = el('g', { class: 'grid' });
+    for (const t of ticks) { g.appendChild(el('line', { x1: m.l, x2: W - m.r, y1: y(t), y2: y(t) })); svg.appendChild(el('text', { x: m.l - 6, y: y(t) + 4, 'text-anchor': 'end' }, fmt(t))); }
+    svg.appendChild(g);
+    svg.appendChild(el('line', { class: 'axis', x1: m.l, x2: W - m.r, y1: y(lo), y2: y(lo) }));
+    const every = Math.ceil(days.length / Math.max(2, Math.floor((W - m.l - m.r) / 56)));
+    const last = days.length - 1;
+    days.forEach((d, i) => { const regular = i % every === 0 && (last - i >= every || i === last); if (regular || i === last) svg.appendChild(el('text', { x: opts.bars ? xb(i) : x(i), y: H - 6, 'text-anchor': 'middle' }, dstr(d))); });
+    return { W, H, m, x, xb, y, lo, hi };
+  }
+  // multi-line chart with crosshair tooltip
+  function lineChart(svg, days, series, opts = {}) {
+    const vals = series.flatMap((s) => s.values).filter((v) => v !== null && v !== undefined);
+    if (!days.length || !vals.length) { svg.replaceChildren(el('text', { x: '50%', y: '50%', 'text-anchor': 'middle' }, 'Нет данных')); return; }
+    const dom = opts.domain ?? [Math.min(...vals, opts.baseline ?? Infinity), Math.max(...vals, opts.baseline ?? -Infinity)];
+    const pad = (dom[1] - dom[0]) * 0.1 || 1;
+    const f = frame(svg, days, [opts.domain ? dom[0] : dom[0] - pad, opts.domain ? dom[1] : dom[1] + pad], { right: 44 });
+    if (opts.baseline !== undefined && opts.baseline !== null) {
+      svg.appendChild(el('line', { x1: f.m.l, x2: f.W - f.m.r, y1: f.y(opts.baseline), y2: f.y(opts.baseline), stroke: css('--deemph'), 'stroke-width': 2, 'stroke-linecap': 'round' }));
+      svg.appendChild(el('text', { x: f.W - f.m.r + 4, y: f.y(opts.baseline) + 4, class: 'lbl' }, fmt(opts.baseline, 1)));
+    }
+    const pts = series.map((s) => s.values.map((v, i) => (v === null || v === undefined ? null : [f.x(i), f.y(v)])));
+    series.forEach((s, si) => {
+      const color = css(s.color);
+      let d = '', started = false;
+      pts[si].forEach((p) => { if (!p) { started = false; return; } d += (started ? 'L' : 'M') + p[0] + ' ' + p[1]; started = true; });
+      if (opts.area && series.length === 1) {
+        const first = pts[si].find(Boolean), lastp = [...pts[si]].reverse().find(Boolean);
+        if (first && lastp) svg.appendChild(el('path', { d: d + `L${lastp[0]} ${f.y(f.lo)}L${first[0]} ${f.y(f.lo)}Z`, fill: css('--wash'), stroke: 'none' }));
+      }
+      svg.appendChild(el('path', { d, fill: 'none', stroke: color, 'stroke-width': 2, 'stroke-linejoin': 'round', 'stroke-linecap': 'round' }));
+      // single points (no neighbours) still need a mark
+      pts[si].forEach((p, i) => { if (p && !pts[si][i - 1] && !pts[si][i + 1]) svg.appendChild(el('circle', { cx: p[0], cy: p[1], r: 4, fill: color, stroke: css('--surface'), 'stroke-width': 2 })); });
+      const li = s.values.length - 1, lv = s.values[li];
+      if (lv !== null && lv !== undefined && pts[si][li]) {
+        svg.appendChild(el('circle', { cx: pts[si][li][0], cy: pts[si][li][1], r: 4, fill: color, stroke: css('--surface'), 'stroke-width': 2 }));
+        svg.appendChild(el('text', { x: pts[si][li][0] + 8, y: pts[si][li][1] + 4 + (opts.baseline !== undefined && Math.abs(f.y(opts.baseline) - pts[si][li][1]) < 12 ? (pts[si][li][1] <= f.y(opts.baseline) ? -10 : 10) : 0) + (series.length > 1 ? (si ? 8 : -6) : 0), class: 'lbl' }, fmt(lv, s.digits ?? 0)));
+      }
+    });
+    const xhair = el('line', { class: 'xhair', y1: f.m.t, y2: f.H - f.m.b, style: 'display:none' });
+    svg.appendChild(xhair);
+    const dots = series.map((s) => { const c = el('circle', { r: 5, fill: css(s.color), stroke: css('--surface'), 'stroke-width': 2, style: 'display:none', 'pointer-events': 'none' }); svg.appendChild(c); return c; });
+    const hit = el('rect', { class: 'hit', x: f.m.l, y: 0, width: f.W - f.m.l - f.m.r, height: f.H });
+    svg.appendChild(hit);
+    const move = (ev) => {
+      const r = svg.getBoundingClientRect();
+      const px = ev.clientX - r.left;
+      const i = Math.max(0, Math.min(days.length - 1, Math.round(((px - f.m.l) / (f.W - f.m.l - f.m.r)) * (days.length - 1))));
+      xhair.setAttribute('x1', f.x(i)); xhair.setAttribute('x2', f.x(i)); xhair.style.display = '';
+      series.forEach((s, si) => { const p = pts[si][i]; if (p) { dots[si].setAttribute('cx', p[0]); dots[si].setAttribute('cy', p[1]); dots[si].style.display = ''; } else dots[si].style.display = 'none'; });
+      showTip(ev.clientX, ev.clientY, dfull(days[i]), series.map((s) => ({ color: css(s.color), value: fmt(s.values[i], s.digits ?? 0) + (s.unit ? ' ' + s.unit : ''), name: s.name })));
+    };
+    hit.addEventListener('pointermove', move);
+    hit.addEventListener('pointerleave', () => { xhair.style.display = 'none'; dots.forEach((d) => (d.style.display = 'none')); hideTip(); });
+  }
+  // stacked / single columns with per-mark tooltip
+  function columnChart(svg, days, series, opts = {}) {
+    const totals = days.map((_, i) => series.reduce((s, x) => s + (x.values[i] || 0), 0));
+    if (!days.length || !totals.some((t) => t > 0)) { svg.replaceChildren(el('text', { x: '50%', y: '50%', 'text-anchor': 'middle' }, 'Нет данных')); return; }
+    const f = frame(svg, days, [0, Math.max(...totals)], { bars: true });
+    const slot = (f.W - f.m.l - f.m.r) / days.length;
+    const bw = Math.min(24, Math.max(3, slot - 4));
+    const GAP = 2;
+    days.forEach((d, i) => {
+      let acc = 0;
+      const cx = f.xb(i);
+      series.forEach((s, si) => {
+        const v = s.values[i] || 0;
+        if (v <= 0) return;
+        const y0 = f.y(acc), y1 = f.y(acc + v);
+        const isTop = series.slice(si + 1).every((x) => !(x.values[i] > 0));
+        let top = y1, h = y0 - y1;
+        if (acc > 0) { top += GAP / 2; h -= GAP / 2; }
+        if (!isTop) h -= GAP / 2;
+        h = Math.max(h, 0.5);
+        const r = isTop ? Math.min(4, h / 2, bw / 2) : 0;
+        const x0 = cx - bw / 2;
+        const path = isTop
+          ? `M${x0} ${top + h}V${top + r}Q${x0} ${top} ${x0 + r} ${top}H${x0 + bw - r}Q${x0 + bw} ${top} ${x0 + bw} ${top + r}V${top + h}Z`
+          : `M${x0} ${top}H${x0 + bw}V${top + h}H${x0}Z`;
+        const p = el('path', { d: path, fill: css(s.color), class: 'bar' });
+        svg.appendChild(p);
+        acc += v;
+      });
+      const hit = el('rect', { class: 'hit', x: cx - slot / 2, y: f.m.t, width: slot, height: f.H - f.m.t - f.m.b });
+      hit.addEventListener('pointermove', (ev) => showTip(ev.clientX, ev.clientY, dfull(d), [
+        ...series.map((s) => ({ color: css(s.color), value: fmt(s.values[i], s.digits ?? 0) + (s.unit ? ' ' + s.unit : ''), name: s.name })),
+        ...(series.length > 1 ? [{ color: css('--deemph'), value: fmt(totals[i], series[0].digits ?? 0) + (series[0].unit ? ' ' + series[0].unit : ''), name: 'всего' }] : []),
+        ...(opts.extra ? opts.extra(i) : []),
+      ]));
+      hit.addEventListener('pointerleave', hideTip);
+      svg.appendChild(hit);
+    });
+    // label the maximum only
+    const mi = totals.indexOf(Math.max(...totals));
+    svg.appendChild(el('text', { x: f.xb(mi), y: f.y(totals[mi]) - 6, 'text-anchor': 'middle', class: 'lbl' }, fmt(totals[mi], series[0].digits ?? 0)));
+  }
+  function legend(node, items, kind = 'line') {
+    node.replaceChildren();
+    for (const it of items) { const s = document.createElement('span'); const i = document.createElement('i'); i.className = kind === 'rect' ? 'rect' : ''; i.style.background = css(it.color); s.appendChild(i); s.appendChild(document.createTextNode(it.name)); node.appendChild(s); }
+  }
+  function spark(values, accent) {
+    const svg = el('svg', { viewBox: '0 0 100 28', preserveAspectRatio: 'none' });
+    const v = values.filter((x) => x !== null && x !== undefined);
+    if (v.length < 2) return svg;
+    const lo = Math.min(...v), hi = Math.max(...v);
+    const pts = values.map((x, i) => (x === null || x === undefined ? null : [(i * 100) / (values.length - 1), 26 - ((x - lo) / (hi - lo || 1)) * 22]));
+    let d = '', st = false; pts.forEach((p) => { if (!p) { st = false; return; } d += (st ? 'L' : 'M') + p[0] + ' ' + p[1]; st = true; });
+    svg.appendChild(el('path', { d, fill: 'none', stroke: css('--deemph'), 'stroke-width': 2, 'vector-effect': 'non-scaling-stroke', 'stroke-linejoin': 'round' }));
+    const last = [...pts].reverse().find(Boolean);
+    if (last) svg.appendChild(el('circle', { cx: last[0], cy: last[1], r: 3, fill: css(accent), 'vector-effect': 'non-scaling-stroke' }));
+    return svg;
+  }
+  function tile(label, value, unit, delta, values, opts = {}) {
+    const t = document.createElement('div'); t.className = 'tile';
+    const l = document.createElement('div'); l.className = 'label'; l.textContent = label; t.appendChild(l);
+    const v = document.createElement('div'); v.className = 'value'; v.textContent = value; if (unit) { const s = document.createElement('small'); s.textContent = unit; v.appendChild(s); } t.appendChild(v);
+    const d = document.createElement('div'); d.className = 'delta';
+    if (delta && delta.value !== null && delta.value !== undefined && !Number.isNaN(delta.value)) {
+      const up = delta.value > 0;
+      const good = delta.value === 0 ? null : (opts.upIsGood === false ? !up : up);
+      d.className += good === null ? '' : good ? ' up' : ' down';
+      d.textContent = `${up ? '+' : ''}${fmt(delta.value, delta.digits ?? 0)}${delta.unit || ''} ${delta.label}`;
+    } else d.textContent = delta ? delta.label : '';
+    t.appendChild(d);
+    if (values) t.appendChild(spark(values, '--s1'));
+    return t;
+  }
+
+  // ---- data ----
+  async function load() {
+    document.body.classList.add('loading');
+    try {
+      const q = new URLSearchParams({ days: state.days }); if (state.end) q.set('end_date', state.end);
+      const r = await fetch('/api/dashboard?' + q, { cache: 'no-store' });
+      if (r.status === 401) { location.href = '/login'; return; }
+      if (r.status === 409) { showEmpty(); return; }
+      const data = await r.json();
+      if (!r.ok) { showError(data.error || r.statusText, data.errors); return; }
+      state.data = data;
+      $('#empty').classList.add('hidden'); $('#content').classList.remove('hidden');
+      render(data);
+    } catch (e) { showError(e.message); }
+    finally { document.body.classList.remove('loading'); }
+  }
+  async function status() {
+    try {
+      const r = await fetch('/api/status', { cache: 'no-store' });
+      if (r.status === 401) { location.href = '/login'; return null; }
+      const s = await r.json();
+      $('#status').textContent = s.connected ? 'Oura подключена' : 'Oura не подключена';
+      $('#logout').classList.toggle('hidden', false);
+      state.status = s;
+      return s;
+    } catch { return null; }
+  }
+  function showEmpty() {
+    const e = $('#empty'); e.replaceChildren();
+    const h = document.createElement('div'); h.style.fontSize = '18px'; h.style.fontWeight = '600'; h.textContent = 'Аккаунт Oura ещё не подключён'; e.appendChild(h);
+    if (state.status?.can_connect) {
+      const p = document.createElement('div'); p.textContent = 'Нажмите кнопку, разрешите доступ на cloud.ouraring.com, и дашборд заполнится.'; e.appendChild(p);
+      const a = document.createElement('a'); a.href = '/connect'; a.textContent = 'Подключить Oura'; a.className = 'primary'; a.style.cssText = 'display:inline-block;padding:10px 18px;border-radius:8px;background:var(--s1);color:#fff;text-decoration:none'; e.appendChild(a);
+    } else {
+      const p = document.createElement('div'); p.textContent = 'На сервере не заданы OURA_CLIENT_ID / OURA_CLIENT_SECRET (или задайте OURA_ACCESS_TOKEN).'; e.appendChild(p);
+    }
+    e.classList.remove('hidden'); $('#content').classList.add('hidden');
+  }
+  function showError(msg, errors) {
+    const e = $('#empty'); e.replaceChildren();
+    const h = document.createElement('div'); h.style.fontWeight = '600'; h.textContent = 'Не удалось получить данные'; e.appendChild(h);
+    const p = document.createElement('pre'); p.style.cssText = 'white-space:pre-wrap;font-size:12px;color:var(--ink2);text-align:left'; p.textContent = msg + (errors ? '\n' + JSON.stringify(errors, null, 2) : ''); e.appendChild(p);
+    e.classList.remove('hidden'); $('#content').classList.add('hidden');
+  }
+
+  // ---- render ----
+  function render(data) {
+    const rows = data.rows, days = rows.map((r) => r.day), latest = data.latest, avg = data.averages;
+    const col = (k) => rows.map((r) => r[k]);
+    const dl = (a, b) => (a === null || b === null || a === undefined || b === null) ? null : a - b;
+
+    const k = $('#kpis'); k.replaceChildren();
+    k.appendChild(tile('Готовность', fmt(latest?.readiness_score), '', { value: dl(latest?.readiness_score, avg.readiness_score), label: 'к среднему' }, col('readiness_score')));
+    k.appendChild(tile('Сон, балл', fmt(latest?.sleep_score), '', { value: dl(latest?.sleep_score, avg.sleep_score), label: 'к среднему' }, col('sleep_score')));
+    k.appendChild(tile('HRV', fmt(latest?.avg_hrv_ms), 'мс', { value: data.hrv.latest_vs_mean_pct, unit: '%', label: 'к среднему', digits: 1 }, col('avg_hrv_ms')));
+    k.appendChild(tile('Пульс покоя', fmt(latest?.lowest_hr_bpm), 'уд/мин', { value: data.resting_hr.latest_vs_mean_bpm, label: 'к среднему', digits: 1 }, col('lowest_hr_bpm'), { upIsGood: false }));
+    k.appendChild(tile('Сон', fmt(latest?.total_sleep_h, 1), 'ч', { value: dl(latest?.total_sleep_h, avg.total_sleep_h), label: 'к среднему', digits: 1 }, col('total_sleep_h')));
+    k.appendChild(tile('Нагрузка', fmt(data.training_load.load_points), 'очк.', { label: `${data.training_load.workouts} трен., ${fmt(data.training_load.total_minutes)} мин · ${fmt(data.training_load.avg_daily_load_points, 1)}/день` }, col('workout_min')));
+
+    legend($('#lg-scores'), [{ name: 'Готовность', color: '--s1' }, { name: 'Сон', color: '--s2' }]);
+    lineChart($('#c-scores'), days, [{ name: 'Готовность', color: '--s1', values: col('readiness_score') }, { name: 'Сон', color: '--s2', values: col('sleep_score') }], { domain: [0, 100] });
+    lineChart($('#c-hrv'), days, [{ name: 'HRV', color: '--s1', values: col('avg_hrv_ms'), unit: 'мс' }], { baseline: data.hrv.mean_ms, area: true });
+    lineChart($('#c-rhr'), days, [{ name: 'Пульс покоя', color: '--s1', values: col('lowest_hr_bpm'), unit: 'уд/мин' }], { baseline: data.resting_hr.mean_bpm, area: true });
+    const h = (k2) => rows.map((r) => (r[k2] === null ? 0 : r[k2] / 60));
+    legend($('#lg-sleep'), [{ name: 'Глубокий', color: '--s1' }, { name: 'REM', color: '--s2' }, { name: 'Лёгкий', color: '--s3' }], 'rect');
+    columnChart($('#c-sleep'), days, [
+      { name: 'Глубокий', color: '--s1', values: h('deep_min'), unit: 'ч', digits: 1 },
+      { name: 'REM', color: '--s2', values: h('rem_min'), unit: 'ч', digits: 1 },
+      { name: 'Лёгкий', color: '--s3', values: h('light_min'), unit: 'ч', digits: 1 },
+    ], { extra: (i) => [{ color: css('--deemph'), value: fmt(rows[i].sleep_efficiency) + ' %', name: 'эффективность' }] });
+    columnChart($('#c-load'), days, [{ name: 'Тренировки', color: '--s1', values: col('workout_min'), unit: 'мин' }], {
+      extra: (i) => [{ color: css('--deemph'), value: String(rows[i].workouts), name: rows[i].workout_types.join(', ') || 'тренировок' }, { color: css('--deemph'), value: fmt(rows[i].active_calories), name: 'активных ккал' }],
+    });
+    legend($('#lg-stress'), [{ name: 'Стресс', color: '--s2' }, { name: 'Восстановление', color: '--s3' }], 'rect');
+    columnChart($('#c-stress'), days, [
+      { name: 'Стресс', color: '--s2', values: rows.map((r) => r.stress_high_min || 0), unit: 'мин' },
+      { name: 'Восстановление', color: '--s3', values: rows.map((r) => r.recovery_high_min || 0), unit: 'мин' },
+    ]);
+
+    // table
+    const cols = [
+      ['Дата', (r) => dstr(r.day)], ['Готовн.', (r) => fmt(r.readiness_score)], ['Сон', (r) => fmt(r.sleep_score)], ['Актив.', (r) => fmt(r.activity_score)],
+      ['Сон, ч', (r) => fmt(r.total_sleep_h, 2)], ['Глуб.', (r) => fmt(r.deep_min)], ['REM', (r) => fmt(r.rem_min)], ['Лёгк.', (r) => fmt(r.light_min)], ['Эфф. %', (r) => fmt(r.sleep_efficiency)],
+      ['HRV', (r) => fmt(r.avg_hrv_ms)], ['Пульс мин', (r) => fmt(r.lowest_hr_bpm)], ['Пульс ср', (r) => fmt(r.avg_hr_bpm)], ['Темп. Δ', (r) => fmt(r.temperature_deviation, 2)],
+      ['Шаги', (r) => fmt(r.steps)], ['Акт. ккал', (r) => fmt(r.active_calories)], ['Трен.', (r) => r.workouts], ['Трен. мин', (r) => fmt(r.workout_min)], ['Типы', (r) => r.workout_types.join(', ')],
+      ['Стресс', (r) => fmt(r.stress_high_min)], ['Восст.', (r) => fmt(r.recovery_high_min)], ['SpO2', (r) => fmt(r.spo2_avg, 1)], ['Резил.', (r) => r.resilience_level || '–'],
+    ];
+    const table = $('#table'); table.replaceChildren();
+    const thead = document.createElement('thead'); const trh = document.createElement('tr');
+    for (const [n] of cols) { const th = document.createElement('th'); th.textContent = n; trh.appendChild(th); }
+    thead.appendChild(trh); table.appendChild(thead);
+    const tb = document.createElement('tbody');
+    for (const r of [...rows].reverse()) { const tr = document.createElement('tr'); for (const [, f] of cols) { const td = document.createElement('td'); td.textContent = String(f(r)); tr.appendChild(td); } tb.appendChild(tr); }
+    table.appendChild(tb);
+
+    const errs = Object.entries(data.errors || {});
+    $('#warn').textContent = errs.length ? 'Недоступно: ' + errs.map(([k2, v]) => `${k2} (${v.replace(/^Oura API /, '').slice(0, 80)})`).join('; ') : '';
+    $('#foot').textContent = `${data.range.start_date} — ${data.range.end_date}, дней с данными: ${data.range.days_with_data}. Обновлено ${new Date(data.generated_at).toLocaleString('ru-RU')}. Это данные кольца, а не медицинская диагностика.`;
+    applyView();
+  }
+
+  let rt; addEventListener('resize', () => { clearTimeout(rt); rt = setTimeout(() => state.data && render(state.data), 150); });
+  matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => state.data && render(state.data));
+  status().then((s) => { if (s && !s.connected) { $('#content').classList.add('hidden'); showEmpty(); } else load(); });
+})();
+</script>
+</body>
+</html>
