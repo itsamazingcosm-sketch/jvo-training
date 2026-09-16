@@ -144,3 +144,22 @@ export function resolveDateTimeRange(
   const iso = (d: Date) => d.toISOString().replace(/\.\d{3}Z$/, "Z");
   return { start_datetime: iso(start!), end_datetime: iso(end!) };
 }
+
+/** Local-midnight bounds of a calendar day in a timezone, as ISO strings with offset. */
+export function localDayRange(dateISO: string, timezone?: string): { start_datetime: string; end_datetime: string } {
+  if (!isISODate(dateISO)) throw new Error(`date must be YYYY-MM-DD, got "${dateISO}"`);
+  const offsetFor = (d: string): string => {
+    try {
+      const parts = new Intl.DateTimeFormat("en-US", { timeZone: timezone, timeZoneName: "longOffset" }).formatToParts(
+        new Date(`${d}T12:00:00Z`),
+      );
+      const raw = parts.find((p) => p.type === "timeZoneName")?.value ?? "GMT";
+      const m = /GMT([+-]\d{2}:\d{2})?/.exec(raw);
+      return m?.[1] ?? "+00:00";
+    } catch {
+      return "+00:00";
+    }
+  };
+  const next = addDays(dateISO, 1);
+  return { start_datetime: `${dateISO}T00:00:00${offsetFor(dateISO)}`, end_datetime: `${next}T00:00:00${offsetFor(next)}` };
+}

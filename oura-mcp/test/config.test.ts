@@ -44,3 +44,16 @@ test("resolveDateTimeRange defaults to the last 24 hours", () => {
   });
   assert.throws(() => resolveDateTimeRange({ start_datetime: "nope" }, now), /ISO 8601/);
 });
+
+test("localDayRange gives local-midnight bounds with the zone offset", async () => {
+  const { localDayRange } = await import("../src/config.js");
+  assert.deepEqual(localDayRange("2026-09-16", "Europe/Moscow"), {
+    start_datetime: "2026-09-16T00:00:00+03:00",
+    end_datetime: "2026-09-17T00:00:00+03:00",
+  });
+  assert.deepEqual(localDayRange("2026-09-16", "UTC"), {
+    start_datetime: "2026-09-16T00:00:00+00:00",
+    end_datetime: "2026-09-17T00:00:00+00:00",
+  });
+  assert.throws(() => localDayRange("16.09.2026", "UTC"), /YYYY-MM-DD/);
+});

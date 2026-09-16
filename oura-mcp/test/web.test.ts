@@ -145,3 +145,36 @@ test("OAuth connect flow: state cookie, callback validation, token persistence",
     await close();
   }
 });
+
+test("/api/day returns the day's collections and the local heart-rate window", async () => {
+  const { get, close, calls } = await boot(
+    { OURA_ACCESS_TOKEN: "tok", OURA_TIMEZONE: "Europe/Moscow" },
+    {
+      "/v2/usercollection/daily_readiness": () => jsonResponse({ data: [{ day: "2026-09-16", score: 76, contributors: { recovery_index: 40 } }] }),
+      "/v2/usercollection/daily_sleep": () => jsonResponse({ data: [{ day: "2026-09-16", score: 71 }] }),
+      "/v2/usercollection/sleep": () =>
+        jsonResponse({ data: [{ day: "2026-09-15", type: "long_sleep" }, { day: "2026-09-16", type: "long_sleep", sleep_phase_5_min: "4443322", movement_30_sec: "111" }] }),
+      "/v2/usercollection/daily_activity": () => jsonResponse({ data: [{ day: "2026-09-16", steps: 100, met: { interval: 60, items: [1, 2] } }] }),
+      "/v2/usercollection/daily_stress": () => jsonResponse({ data: [] }),
+      "/v2/usercollection/daily_spo2": () => jsonResponse({ data: [] }),
+      "/v2/usercollection/workout": () => jsonResponse({ data: [] }),
+      "/v2/usercollection/heartrate": () => jsonResponse({ data: [{ bpm: 60, source: "sleep", timestamp: "2026-09-16T02:00:00+03:00" }] }),
+    },
+  );
+  try {
+    const body = await json(await get("/api/day?date=2026-09-16"));
+    assert.equal(body.readiness[0].score, 76);
+    assert.equal(body.sleep.length, 1);
+    assert.equal(body.sleep[0].sleep_phase_5_min, "4443322");
+    assert.equal(body.sleep[0].movement_30_sec, undefined);
+    assert.equal(body.activity[0].met.omitted, true);
+    assert.equal(body.heart_rate.length, 1);
+    assert.equal(body.day_start, "2026-09-16T00:00:00+03:00");
+    const hrCall = calls.find((c) => c.url.pathname.endsWith("/heartrate"))!;
+    assert.equal(hrCall.url.searchParams.get("start_datetime"), "2026-09-16T00:00:00+03:00");
+    assert.equal(hrCall.url.searchParams.get("end_datetime"), "2026-09-17T00:00:00+03:00");
+    assert.equal((await get("/api/day?date=nope")).status, 400);
+  } finally {
+    await close();
+  }
+});

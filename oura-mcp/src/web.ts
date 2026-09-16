@@ -3,9 +3,9 @@ import { createHmac, randomBytes, timingSafeEqual } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { resolveDateRange, type OuraConfig } from "./config.js";
+import { localDayRange, resolveDateRange, todayISO, addDays, isISODate, type OuraConfig } from "./config.js";
 import { buildAuthorizeUrl, createTokenProvider, exchangeCode, TokenStore } from "./auth.js";
-import { OuraClient, type Json } from "./oura-client.js";
+import { OuraClient, stripSeries, type Json } from "./oura-client.js";
 import { buildDashboard } from "./summaries.js";
 
 const SESSION_COOKIE = "oura_dash";
@@ -85,12 +85,13 @@ async function readBody(req: IncomingMessage, limit = 64 * 1024): Promise<string
 const escapeHtml = (s: string) => s.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]!);
 
 function loginPage(error?: string): string {
-  return `<!doctype html><html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Oura · вход</title>
-<style>body{font-family:system-ui,-apple-system,"Segoe UI",sans-serif;background:#f9f9f7;color:#0b0b0b;display:grid;place-items:center;min-height:100vh;margin:0}
-@media(prefers-color-scheme:dark){body{background:#0d0d0d;color:#fff}input{background:#1a1a19;color:#fff;border-color:#383835}}
-form{display:grid;gap:12px;width:min(320px,90vw)}h1{font-size:20px;margin:0 0 4px}input,button{font:inherit;padding:10px 12px;border-radius:8px;border:1px solid #c3c2b7}
-button{background:#2a78d6;color:#fff;border:0;cursor:pointer}.err{color:#d03b3b;font-size:14px}</style></head>
-<body><form method="post" action="/login"><h1>Oura дашборд</h1><label>Пароль<br><input type="password" name="password" autofocus required></label>${
+  return `<!doctype html><html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Кольцо · вход</title>
+<style>body{font-family:"Manrope",system-ui,-apple-system,"Segoe UI",sans-serif;background:#0e1216;color:#f3f4f2;display:grid;place-items:center;min-height:100vh;margin:0}
+form{display:grid;gap:14px;width:min(340px,90vw);background:#181d22;padding:28px 24px;border-radius:24px}
+h1{font-family:"Playfair Display",Georgia,serif;font-weight:400;font-size:28px;margin:0 0 4px}
+label{font-size:13px;color:#b3b8b5}input,button{font:inherit;padding:12px 14px;border-radius:12px;border:1px solid rgba(255,255,255,.1);background:#20262c;color:#f3f4f2;width:100%;box-sizing:border-box;margin-top:6px}
+button{background:#f3f4f2;color:#0e1216;border:0;cursor:pointer;font-weight:600}.err{color:#e06a6a;font-size:14px}</style></head>
+<body><form method="post" action="/login"><h1>Кольцо</h1><label>Пароль<input type="password" name="password" autofocus required></label>${
     error ? `<div class="err">${escapeHtml(error)}</div>` : ""
   }<button type="submit">Войти</button></form></body></html>`;
 }
@@ -221,6 +222,44 @@ export function createWebServer(config: OuraConfig, opts: WebOptions = {}): Serv
         const [readiness, dailySleep, sleepPeriods, activity, workouts, stress, spo2, resilience] = got;
         const summary = buildDashboard({ range, readiness, dailySleep, sleepPeriods, activity, workouts, stress, spo2, resilience });
         return sendJson(res, 200, { ...summary, errors, generated_at: new Date().toISOString() });
+      }
+      if (path === "/api/day") {
+        if (!isConnected()) return sendJson(res, 409, { error: "not_connected" });
+        const today = todayISO(config.timezone);
+        const date = url.searchParams.get("date") ?? today;
+        if (!isISODate(date)) return sendJson(res, 400, { error: "date must be YYYY-MM-DD" });
+        const one = { start_date: date, end_date: date };
+        // sleep periods are keyed by the day they END on; fetch the previous day too for naps that span midnight
+        const sleepRange = { start_date: addDays(date, -1), end_date: date };
+        const hr = localDayRange(date, config.timezone);
+        const jobs: Record<string, Promise<Json[]>> = {
+          readiness: client.listByDate<Json>("daily_readiness", one).then((r) => r.data),
+          daily_sleep: client.listByDate<Json>("daily_sleep", one).then((r) => r.data),
+          sleep: client.listByDate<Json>("sleep", sleepRange).then((r) => r.data),
+          activity: client.listByDate<Json>("daily_activity", one).then((r) => r.data),
+          stress: client.listByDate<Json>("daily_stress", one).then((r) => r.data),
+          spo2: client.listByDate<Json>("daily_spo2", one).then((r) => r.data),
+          workouts: client.listByDate<Json>("workout", one).then((r) => r.data),
+          heart_rate: client.listByDateTime<Json>("heartrate", hr, { maxPages: 10 }).then((r) => r.data),
+        };
+        const names = Object.keys(jobs);
+        const settled = await Promise.allSettled(Object.values(jobs));
+        const errors: Record<string, string> = {};
+        const out: Record<string, unknown> = { date, today, timezone: config.timezone ?? null, day_start: hr.start_datetime, day_end: hr.end_datetime };
+        settled.forEach((s, i) => {
+          if (s.status === "fulfilled") out[names[i]] = s.value;
+          else {
+            errors[names[i]] = s.reason instanceof Error ? s.reason.message : String(s.reason);
+            out[names[i]] = [];
+          }
+        });
+        if (Object.keys(errors).length === names.length) return sendJson(res, 502, { error: "oura_failed", errors });
+        const sleep = (out.sleep as Json[]).filter((p) => p.day === date);
+        out.sleep = sleep.map((p) => ({ ...p, heart_rate: p.heart_rate, hrv: p.hrv, sleep_phase_5_min: p.sleep_phase_5_min, movement_30_sec: undefined }));
+        out.activity = (out.activity as Json[]).map(stripSeries);
+        out.errors = errors;
+        out.generated_at = new Date().toISOString();
+        return sendJson(res, 200, out);
       }
       if (path.startsWith("/api/")) return sendJson(res, 404, { error: "not_found" });
 

@@ -2,196 +2,343 @@
 <html lang="ru">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Oura · Дашборд</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0e1216">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Кольцо">
+<title>Кольцо · Дашборд</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&family=Playfair+Display:wght@400;500&display=swap" rel="stylesheet">
 <style>
 :root{
-  color-scheme:light;
-  --page:#f9f9f7;--surface:#fcfcfb;--ink:#0b0b0b;--ink2:#52514e;--muted:#898781;--grid:#e1e0d9;--axis:#c3c2b7;--border:rgba(11,11,11,.10);
-  --s1:#2a78d6;--s2:#eb6834;--s3:#1baf7a;--deemph:#c3c2b7;--good:#006300;--bad:#d03b3b;--wash:rgba(42,120,214,.10);
-}
-@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
-  color-scheme:dark;--page:#0d0d0d;--surface:#1a1a19;--ink:#fff;--ink2:#c3c2b7;--muted:#898781;--grid:#2c2c2a;--axis:#383835;--border:rgba(255,255,255,.10);
-  --s1:#3987e5;--s2:#d95926;--s3:#199e70;--deemph:#383835;--good:#0ca30c;--bad:#e66767;--wash:rgba(57,135,229,.10);
-}}
-:root[data-theme="dark"]{
-  color-scheme:dark;--page:#0d0d0d;--surface:#1a1a19;--ink:#fff;--ink2:#c3c2b7;--muted:#898781;--grid:#2c2c2a;--axis:#383835;--border:rgba(255,255,255,.10);
-  --s1:#3987e5;--s2:#d95926;--s3:#199e70;--deemph:#383835;--good:#0ca30c;--bad:#e66767;--wash:rgba(57,135,229,.10);
+  color-scheme:dark;
+  --page:#0e1216;--surface:#181d22;--surface-2:#20262c;--ink:#f3f4f2;--ink2:#b3b8b5;--muted:#7d837f;--grid:#262c31;--axis:#343b41;--border:rgba(255,255,255,.08);
+  --blue:#3987e5;--orange:#d95926;--aqua:#199e70;--deemph:#3a4147;--wash:rgba(57,135,229,.12);
+  --sleep:#3d97d9;--act:#c4841a;--stress:#dc4a70;--hr-awake:#8a9199;
+  --st-good:#4fc7a2;--st-warn:#e8a06a;--st-bad:#e06a6a;
+  --deep:#1c5cab;--light:#3987e5;--rem:#86b6ef;--awake:#c3c2b7;
+  --font:"Manrope",system-ui,-apple-system,"Segoe UI",sans-serif;--serif:"Playfair Display",Georgia,"Times New Roman",serif;
+  --nav-h:64px;
 }
 *{box-sizing:border-box}
-body{margin:0;background:var(--page);color:var(--ink);font:15px/1.4 system-ui,-apple-system,"Segoe UI",sans-serif}
-a{color:var(--s1)}
-.wrap{max-width:1200px;margin:0 auto;padding:16px}
-header{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:12px}
-header h1{font-size:20px;margin:0;font-weight:600}
-header .spacer{flex:1}
-.status{font-size:13px;color:var(--ink2)}
-button,select,input{font:inherit;color:var(--ink);background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:6px 10px}
+html{background:var(--page)}
+body{margin:0;background:var(--page);color:var(--ink);font:15px/1.45 var(--font);-webkit-font-smoothing:antialiased;padding-bottom:calc(var(--nav-h) + env(safe-area-inset-bottom))}
+a{color:var(--sleep)}
+button,select,input{font:inherit;color:var(--ink);background:var(--surface-2);border:1px solid var(--border);border-radius:12px;padding:8px 12px}
 button{cursor:pointer}
-button.primary{background:var(--s1);color:#fff;border-color:transparent}
-.filters{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:8px 0 16px}
-.seg{display:inline-flex;border:1px solid var(--border);border-radius:8px;overflow:hidden;background:var(--surface)}
-.seg button{border:0;border-radius:0;background:transparent;padding:6px 12px}
-.seg button[aria-pressed="true"]{background:var(--ink);color:var(--surface);font-weight:600}
-.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:16px}
-.tile{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:12px 14px;display:grid;gap:4px}
-.tile .label{font-size:13px;color:var(--ink2)}
-.tile .value{font-size:28px;font-weight:600;line-height:1.1}
-.tile .value small{font-size:14px;font-weight:400;color:var(--ink2);margin-left:4px}
-.tile .delta{font-size:13px;color:var(--ink2)}
-.tile .delta.up{color:var(--good)}.tile .delta.down{color:var(--bad)}
-.tile svg{width:100%;height:28px;display:block;margin-top:4px}
-.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,440px),1fr));gap:12px}
-.card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px;position:relative;min-width:0}
-.card h2{font-size:15px;font-weight:600;margin:0 0 2px}
+.app{max-width:1120px;margin:0 auto;padding:12px 16px 24px}
+/* top bar */
+.top{display:flex;align-items:center;gap:10px;padding:8px 0 4px}
+.top .brand{font-family:var(--serif);font-size:22px;letter-spacing:.02em}
+.top .spacer{flex:1}
+.top .status{font-size:12px;color:var(--muted)}
+.top a{font-size:13px;color:var(--ink2);text-decoration:none}
+/* day switcher */
+.dayrow{display:flex;align-items:center;justify-content:center;gap:6px;margin:6px 0 10px}
+.dayrow button{background:transparent;border:0;color:var(--ink2);font-size:22px;line-height:1;padding:6px 10px}
+.dayrow .day{font-weight:600;min-width:170px;text-align:center}
+.dayrow .day small{display:block;font-weight:500;font-size:12px;color:var(--muted)}
+.dayrow input[type=date]{position:absolute;opacity:0;width:0;height:0}
+/* screens */
+.screen{display:none}.screen.on{display:block}
+.hero{border-radius:24px;padding:22px 20px 18px;position:relative;overflow:hidden;background:var(--surface)}
+.hero.tint-ready{background:linear-gradient(160deg,#16302b 0%,#141c20 55%,var(--surface) 100%)}
+.hero.tint-sleep{background:linear-gradient(160deg,#1c2340 0%,#161b28 55%,var(--surface) 100%)}
+.hero.tint-hr{background:linear-gradient(160deg,#33202a 0%,#1d1a20 55%,var(--surface) 100%)}
+.hero .kicker{font-size:13px;color:var(--ink2);display:flex;align-items:center;gap:8px}
+.hero .score{display:flex;align-items:baseline;gap:10px;margin-top:6px}
+.hero .score b{font-size:64px;font-weight:500;line-height:1;letter-spacing:-.02em}
+.hero .score span{font-size:12px;letter-spacing:.12em;font-weight:700}
+.hero h2{font-family:var(--serif);font-weight:400;font-size:30px;line-height:1.15;margin:18px 0 8px}
+.hero p{margin:0;color:var(--ink2);font-size:15px}
+.st-good{color:var(--st-good)}.st-warn{color:var(--st-warn)}.st-bad{color:var(--st-bad)}
+.section{font-size:13px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:22px 0 10px;font-weight:600}
+.contrib{display:grid;gap:4px}
+.contrib .row{padding:10px 0 6px;border-bottom:1px solid var(--border)}
+.contrib .row:last-child{border-bottom:0}
+.contrib .line{display:flex;justify-content:space-between;align-items:center;gap:12px}
+.contrib .line .val{color:var(--ink2);font-size:14px;white-space:nowrap}
+.contrib .bar{height:4px;border-radius:2px;background:var(--surface-2);margin-top:8px;overflow:hidden}
+.contrib .bar i{display:block;height:100%;border-radius:2px;background:var(--ink)}
+.contrib .bar i.warn{background:var(--st-warn)}.contrib .bar i.bad{background:var(--st-bad)}
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;margin-top:10px}
+.card{background:var(--surface);border-radius:20px;padding:16px 16px 14px;min-width:0}
+.card.wide{grid-column:1/-1}
+.card .t{font-size:14px;color:var(--ink2);display:flex;justify-content:space-between;align-items:baseline;flex-wrap:wrap;gap:2px 8px}
+.card .t .badge{font-size:11px;font-weight:700;letter-spacing:.06em;white-space:nowrap}
+.card .v{font-size:30px;font-weight:600;margin-top:18px;line-height:1.1;letter-spacing:-.01em;white-space:nowrap}
+.card .v small{font-size:14px;font-weight:500;color:var(--ink2);margin-left:5px}
+.card .n{font-size:13px;color:var(--muted);margin-top:4px}
+.card svg.spark{width:100%;height:30px;display:block;margin-top:8px}
+.card h3{font-size:15px;font-weight:600;margin:0 0 2px}
 .card .sub{font-size:13px;color:var(--ink2);margin-bottom:8px}
-.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:13px;color:var(--ink2);margin-bottom:6px}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:13px;color:var(--ink2);margin:6px 0 8px}
 .legend span{display:inline-flex;align-items:center;gap:6px}
 .legend i{display:inline-block;width:14px;height:3px;border-radius:2px}
-.legend i.rect{width:10px;height:10px;border-radius:2px}
+.legend i.rect{width:10px;height:10px;border-radius:3px}
 .chart{width:100%;height:220px;display:block}
-.chart text{fill:var(--muted);font-size:11px}
+.chart.tall{height:260px}.chart.short{height:150px}
+.chart text{fill:var(--muted);font-size:11px;font-family:var(--font)}
 .chart .grid line{stroke:var(--grid);stroke-width:1}
 .chart .axis{stroke:var(--axis);stroke-width:1}
 .chart .lbl{fill:var(--ink2);font-size:11px;font-weight:600}
 .chart .xhair{stroke:var(--axis);stroke-width:1;pointer-events:none}
 .chart .hit{fill:transparent}
-.chart .bar:hover,.chart .bar.on{filter:brightness(1.15)}
-.tip{position:fixed;z-index:10;pointer-events:none;background:var(--surface);color:var(--ink);border:1px solid var(--border);border-radius:8px;padding:8px 10px;font-size:13px;box-shadow:0 4px 16px rgba(0,0,0,.15);display:none;min-width:140px}
+.chart .bar:hover{filter:brightness(1.2)}
+.kv{display:grid;grid-template-columns:1fr;gap:0 20px;font-size:14px;margin-top:12px}
+.kv div{display:flex;justify-content:space-between;gap:8px;border-bottom:1px solid var(--border);padding:8px 0;white-space:nowrap}
+@media (min-width:480px){.kv{grid-template-columns:1fr 1fr}}
+.kv div span{color:var(--ink2)}
+.stages{display:grid;gap:8px;margin-top:10px}
+.stages .s{display:grid;grid-template-columns:80px 1fr 92px;align-items:center;gap:10px;font-size:14px;white-space:nowrap}
+.stages .s .b{height:8px;border-radius:4px;background:var(--surface-2);overflow:hidden}
+.stages .s .b i{display:block;height:100%;border-radius:4px}
+.stages .s .d{text-align:right;color:var(--ink2);font-variant-numeric:tabular-nums}
+.tip{position:fixed;z-index:30;pointer-events:none;background:var(--surface-2);color:var(--ink);border:1px solid var(--border);border-radius:10px;padding:8px 10px;font-size:13px;box-shadow:0 6px 20px rgba(0,0,0,.4);display:none;min-width:140px}
 .tip .d{color:var(--ink2);margin-bottom:4px}
 .tip .r{display:flex;align-items:center;gap:8px}
 .tip .r i{width:12px;height:3px;border-radius:2px;display:inline-block}
 .tip .r b{font-weight:600;min-width:44px}
 .tip .r span{color:var(--ink2)}
-.loading .card,.loading .tile{opacity:.5;transition:opacity .2s}
-.empty{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:32px;text-align:center;display:grid;gap:12px;justify-items:center}
+.filters{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:8px 0 12px}
+.seg{display:inline-flex;border:1px solid var(--border);border-radius:12px;overflow:hidden;background:var(--surface)}
+.seg button{border:0;border-radius:0;background:transparent;padding:7px 12px;color:var(--ink2)}
+.seg button[aria-pressed="true"]{background:var(--ink);color:var(--page);font-weight:600}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,420px),1fr));gap:10px}
 table{width:100%;border-collapse:collapse;font-size:13px;font-variant-numeric:tabular-nums}
-th,td{padding:6px 8px;text-align:right;border-bottom:1px solid var(--grid);white-space:nowrap}
+th,td{padding:7px 8px;text-align:right;border-bottom:1px solid var(--grid);white-space:nowrap}
 th:first-child,td:first-child{text-align:left}
 th{color:var(--ink2);font-weight:600;position:sticky;top:0;background:var(--surface)}
 .tablewrap{overflow:auto;max-height:70vh}
-.hidden{display:none}
-.warn{font-size:13px;color:var(--ink2);margin-top:12px}
-footer{margin-top:20px;font-size:12px;color:var(--muted)}
+.hidden{display:none!important}
+.loading .card,.loading .hero{opacity:.55;transition:opacity .2s}
+.empty{background:var(--surface);border-radius:20px;padding:32px 20px;text-align:center;display:grid;gap:12px;justify-items:center}
+.btn{display:inline-block;padding:12px 20px;border-radius:14px;background:var(--ink);color:var(--page);text-decoration:none;font-weight:600}
+.warn{font-size:12px;color:var(--muted);margin-top:14px}
+footer{margin-top:16px;font-size:12px;color:var(--muted)}
+/* bottom nav */
+nav.tabs{position:fixed;left:0;right:0;bottom:0;height:calc(var(--nav-h) + env(safe-area-inset-bottom));padding-bottom:env(safe-area-inset-bottom);background:rgba(14,18,22,.92);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-top:1px solid var(--border);display:flex;z-index:20}
+nav.tabs button{flex:1;background:transparent;border:0;border-radius:0;color:var(--muted);display:flex;flex-direction:column;align-items:center;gap:3px;font-size:11px;padding:8px 4px}
+nav.tabs button svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+nav.tabs button[aria-selected="true"]{color:var(--ink)}
+@media (min-width:900px){
+  body{padding-bottom:24px}
+  .app{padding:16px 24px 32px 108px}
+  nav.tabs{top:0;bottom:auto;left:0;right:auto;width:84px;height:100vh;flex-direction:column;justify-content:flex-start;padding-top:80px;border-top:0;border-right:1px solid var(--border);gap:8px}
+  nav.tabs button{flex:0 0 auto;padding:12px 4px}
+  .cards{grid-template-columns:repeat(auto-fill,minmax(165px,1fr))}
+  .card.wide{grid-column:span 2}
+  .hero h2{font-size:34px}
+  .today-grid{display:grid;grid-template-columns:1.1fr 1fr;gap:12px;align-items:start}
+  .today-grid .hero{margin:0}
+  .sleep-grid,.hr-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;align-items:start}
+}
 </style>
 </head>
 <body>
-<div class="wrap">
-  <header>
-    <h1>Oura · Дашборд</h1>
-    <span class="status" id="status">…</span>
+<div class="app">
+  <div class="top">
+    <div class="brand">Кольцо</div>
+    <span class="status" id="status"></span>
     <span class="spacer"></span>
-    <button id="theme" title="Тема">◐</button>
-    <a href="/logout" id="logout" class="hidden" style="font-size:13px">Выйти</a>
-  </header>
-
-  <div class="filters" id="filters">
-    <div class="seg" id="range">
-      <button data-days="7">7 дней</button>
-      <button data-days="14" aria-pressed="true">14 дней</button>
-      <button data-days="30">30 дней</button>
-      <button data-days="90">90 дней</button>
-    </div>
-    <label style="font-size:13px;color:var(--ink2)">до <input type="date" id="end"></label>
-    <button id="reload">Обновить</button>
-    <span class="spacer"></span>
-    <div class="seg" id="view">
-      <button data-view="charts" aria-pressed="true">Графики</button>
-      <button data-view="table">Таблица</button>
-    </div>
+    <a href="/logout" id="logout">Выйти</a>
   </div>
 
   <div id="empty" class="empty hidden"></div>
 
-  <div id="content">
-    <div class="kpis" id="kpis"></div>
-    <div class="grid" id="charts">
-      <div class="card"><h2>Готовность и сон</h2><div class="sub">Баллы 0–100</div><div class="legend" id="lg-scores"></div><svg class="chart" id="c-scores"></svg></div>
-      <div class="card"><h2>HRV во сне</h2><div class="sub">Средний RMSSD, мс · серая линия — среднее за период</div><svg class="chart" id="c-hrv"></svg></div>
-      <div class="card"><h2>Пульс покоя</h2><div class="sub">Минимальный пульс за ночь, уд/мин · серая линия — среднее</div><svg class="chart" id="c-rhr"></svg></div>
-      <div class="card"><h2>Фазы сна</h2><div class="sub">Часы за основной сон</div><div class="legend" id="lg-sleep"></div><svg class="chart" id="c-sleep"></svg></div>
-      <div class="card"><h2>Тренировки</h2><div class="sub">Минуты за день, все тренировки</div><svg class="chart" id="c-load"></svg></div>
-      <div class="card"><h2>Стресс и восстановление</h2><div class="sub">Минуты в день</div><div class="legend" id="lg-stress"></div><svg class="chart" id="c-stress"></svg></div>
-    </div>
-    <div class="card hidden" id="tablecard"><h2>Данные по дням</h2><div class="tablewrap"><table id="table"></table></div></div>
-    <div class="warn" id="warn"></div>
+  <div id="dayrow" class="dayrow">
+    <button id="prev" aria-label="Предыдущий день">‹</button>
+    <label class="day" id="daylabel"><span id="daytext">Сегодня</span><small id="daysub"></small><input type="date" id="datepick"></label>
+    <button id="next" aria-label="Следующий день">›</button>
   </div>
+
+  <!-- Сегодня -->
+  <section class="screen on" id="s-today">
+    <div class="today-grid">
+      <div class="hero tint-ready" id="hero-ready"></div>
+      <div>
+        <div class="section">Показатели дня</div>
+        <div class="cards" id="today-cards"></div>
+      </div>
+    </div>
+    <div class="section">Из чего складывается готовность</div>
+    <div class="card"><div class="contrib" id="ready-contrib"></div></div>
+  </section>
+
+  <!-- Сон -->
+  <section class="screen" id="s-sleep">
+    <div class="sleep-grid">
+      <div>
+        <div class="hero tint-sleep" id="hero-sleep"></div>
+        <div class="section">Фазы сна</div>
+        <div class="card"><svg class="chart short" id="c-hypno"></svg><div class="stages" id="stages"></div></div>
+      </div>
+      <div>
+        <div class="section">Ночью</div>
+        <div class="card"><h3>Пульс во сне</h3><div class="sub">Уд/мин, каждые 5 минут</div><svg class="chart short" id="c-sleep-hr"></svg></div>
+        <div class="card" style="margin-top:10px"><h3>HRV во сне</h3><div class="sub">RMSSD, мс</div><svg class="chart short" id="c-sleep-hrv"></svg></div>
+        <div class="section">Из чего складывается сон</div>
+        <div class="card"><div class="contrib" id="sleep-contrib"></div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Пульс -->
+  <section class="screen" id="s-heart">
+    <div class="hr-grid">
+      <div>
+        <div class="hero tint-hr" id="hero-hr"></div>
+        <div class="card" style="margin-top:10px"><h3>Пульс за день</h3><div class="sub">Каждые ~5 минут, местное время</div>
+          <div class="legend"><span><i class="rect" style="background:var(--sleep)"></i>Сон</span><span><i class="rect" style="background:var(--act)"></i>Тренировка</span><span><i class="rect" style="background:var(--hr-awake)"></i>Бодрствование</span></div>
+          <svg class="chart tall" id="c-hr-day"></svg></div>
+      </div>
+      <div>
+        <div class="section">Сводка</div>
+        <div class="cards" id="hr-cards"></div>
+        <div class="section">Тренировки за день</div>
+        <div class="card" id="workouts"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Тренды -->
+  <section class="screen" id="s-trends">
+    <div class="filters">
+      <div class="seg" id="range">
+        <button data-days="7">7 дней</button>
+        <button data-days="14" aria-pressed="true">14 дней</button>
+        <button data-days="30">30 дней</button>
+        <button data-days="90">90 дней</button>
+      </div>
+      <span class="spacer" style="flex:1"></span>
+      <div class="seg" id="view">
+        <button data-view="charts" aria-pressed="true">Графики</button>
+        <button data-view="table">Таблица</button>
+      </div>
+    </div>
+    <div id="kpis" class="cards" style="margin-bottom:10px"></div>
+    <div class="grid" id="charts">
+      <div class="card"><h3>Готовность и сон</h3><div class="sub">Баллы 0–100</div><div class="legend" id="lg-scores"></div><svg class="chart" id="c-scores"></svg></div>
+      <div class="card"><h3>HRV во сне</h3><div class="sub">Средний RMSSD, мс · серая линия — среднее за период</div><svg class="chart" id="c-hrv"></svg></div>
+      <div class="card"><h3>Пульс покоя</h3><div class="sub">Минимальный пульс за ночь · серая линия — среднее</div><svg class="chart" id="c-rhr"></svg></div>
+      <div class="card"><h3>Фазы сна</h3><div class="sub">Часы за основной сон</div><div class="legend" id="lg-sleep"></div><svg class="chart" id="c-sleep"></svg></div>
+      <div class="card"><h3>Тренировки</h3><div class="sub">Минуты за день</div><svg class="chart" id="c-load"></svg></div>
+      <div class="card"><h3>Стресс и восстановление</h3><div class="sub">Минуты в день</div><div class="legend" id="lg-stress"></div><svg class="chart" id="c-stress"></svg></div>
+    </div>
+    <div class="card hidden" id="tablecard"><h3>Данные по дням</h3><div class="tablewrap"><table id="table"></table></div></div>
+  </section>
+
+  <div class="warn" id="warn"></div>
   <footer id="foot"></footer>
 </div>
+
+<nav class="tabs" id="tabs">
+  <button data-screen="today" aria-selected="true"><svg viewBox="0 0 24 24"><path d="M12 3v4M12 17v4M3 12h4M17 12h4"/><circle cx="12" cy="12" r="5"/></svg>Сегодня</button>
+  <button data-screen="sleep"><svg viewBox="0 0 24 24"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/></svg>Сон</button>
+  <button data-screen="heart"><svg viewBox="0 0 24 24"><path d="M20.8 8.6c0 5.4-8.8 11-8.8 11S3.2 14 3.2 8.6a4.6 4.6 0 0 1 8.8-2 4.6 4.6 0 0 1 8.8 2z"/></svg>Пульс</button>
+  <button data-screen="trends"><svg viewBox="0 0 24 24"><path d="M3 17l5-6 4 4 5-7 4 3"/></svg>Тренды</button>
+</nav>
 <div class="tip" id="tip"></div>
 
 <script>
 (() => {
   const $ = (s) => document.querySelector(s);
   const fmt = (v, d = 0) => (v === null || v === undefined || Number.isNaN(v)) ? '–' : Number(v).toLocaleString('ru-RU', { maximumFractionDigits: d, minimumFractionDigits: 0 });
-  const dstr = (iso) => { const [y, m, d] = iso.split('-'); return `${d}.${m}`; };
+  const dstr = (iso) => { const [, m, d] = iso.split('-'); return `${d}.${m}`; };
   const dfull = (iso) => new Date(iso + 'T00:00:00').toLocaleDateString('ru-RU', { weekday: 'short', day: 'numeric', month: 'long' });
+  const dlong = (iso) => new Date(iso + 'T00:00:00').toLocaleDateString('ru-RU', { weekday: 'long', day: 'numeric', month: 'long' });
   const css = (n) => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+  const hm = (sec) => (sec === null || sec === undefined) ? '–' : `${Math.floor(sec / 3600)} ч ${String(Math.round((sec % 3600) / 60)).padStart(2, '0')} мин`;
+  // Время показываем в часовом поясе, в котором Oura отдала метку (offset в строке), а не в поясе браузера.
+  const offMs = (iso) => { const m = /([+-])(\d{2}):(\d{2})$/.exec(iso || ''); return m ? (m[1] === '-' ? -1 : 1) * (Number(m[2]) * 60 + Number(m[3])) * 60000 : 0; };
+  const clockAt = (ms, off) => new Date(ms + off).toISOString().slice(11, 16);
+  const tm = (iso) => iso ? clockAt(Date.parse(iso), offMs(iso)) : '–';
+  const addDays = (iso, n) => { const d = new Date(iso + 'T00:00:00Z'); d.setUTCDate(d.getUTCDate() + n); return d.toISOString().slice(0, 10); };
+  const text = (tag, cls, t) => { const e = document.createElement(tag); if (cls) e.className = cls; if (t !== undefined) e.textContent = t; return e; };
 
-  // ---- theme ----
-  let theme = null;
-  try { theme = localStorage.getItem('theme'); } catch {}
-  if (theme) document.documentElement.dataset.theme = theme;
-  $('#theme').onclick = () => {
-    const cur = document.documentElement.dataset.theme || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
-    const next = cur === 'dark' ? 'light' : 'dark';
-    document.documentElement.dataset.theme = next;
-    try { localStorage.setItem('theme', next); } catch {}
-    if (state.data) render(state.data);
+  // ---------- Русские названия и статусы ----------
+  const READY = {
+    resting_heart_rate: 'Пульс покоя', hrv_balance: 'Баланс HRV', body_temperature: 'Температура тела', recovery_index: 'Индекс восстановления',
+    sleep_balance: 'Баланс сна', previous_night: 'Прошлая ночь', previous_day_activity: 'Активность вчера', activity_balance: 'Баланс активности',
   };
+  const SLEEPC = { total_sleep: 'Длительность', efficiency: 'Эффективность', restfulness: 'Спокойствие', rem_sleep: 'REM-сон', deep_sleep: 'Глубокий сон', latency: 'Засыпание', timing: 'Время отхода ко сну' };
+  const ADVICE = {
+    recovery_index: ['Индекс восстановления', 'Пульс ночью снижался медленнее обычного. Дайте телу спокойный день: лёгкая нагрузка и ранний отбой.'],
+    hrv_balance: ['Баланс HRV', 'Вариабельность пульса ниже вашей нормы за две недели. Так проявляется накопленная нагрузка или стресс.'],
+    resting_heart_rate: ['Пульс покоя', 'Пульс покоя выше обычного. Частые причины: поздний ужин, алкоголь, начало болезни или тяжёлая тренировка накануне.'],
+    body_temperature: ['Температура тела', 'Температура отклонилась от вашей нормы. Присмотритесь к самочувствию и не форсируйте нагрузку.'],
+    sleep_balance: ['Баланс сна', 'За последние две недели сна меньше, чем нужно телу. Долг сна накапливается.'],
+    previous_night: ['Прошлая ночь', 'Ночь была короче или беспокойнее обычного. Сегодня стоит лечь пораньше.'],
+    previous_day_activity: ['Активность вчера', 'Вчера нагрузка была выше обычного. Телу нужно время, чтобы её усвоить.'],
+    activity_balance: ['Баланс активности', 'Нагрузка за две недели выше вашей нормы. Хороший момент для разгрузочного дня.'],
+  };
+  const SLEEP_ADVICE = {
+    total_sleep: ['Длительность сна', 'Сна было меньше, чем нужно. Попробуйте лечь на 30–60 минут раньше.'],
+    efficiency: ['Эффективность', 'Много времени в кровати без сна. Помогают прохладная тёмная комната и отказ от экрана перед сном.'],
+    restfulness: ['Спокойствие', 'Ночью было много пробуждений и движений. Часто это поздняя еда, алкоголь или жара.'],
+    rem_sleep: ['REM-сон', 'REM-сна меньше обычного. Он приходит под утро, так что ранний подъём или недосып бьют по нему первым.'],
+    deep_sleep: ['Глубокий сон', 'Глубокого сна меньше обычного. Его укрепляют регулярный режим и вечер без алкоголя.'],
+    latency: ['Засыпание', 'Засыпали дольше обычного. Помогают один и тот же час отбоя и меньше кофеина после обеда.'],
+    timing: ['Время сна', 'Легли позже вашего привычного окна. Стабильное время отбоя улучшает качество сна.'],
+  };
+  const scoreLabel = (s) => s === null || s === undefined ? ['', ''] : s >= 85 ? ['ОТЛИЧНО', 'st-good'] : s >= 70 ? ['ХОРОШО', 'st-good'] : s >= 60 ? ['СРЕДНЕ', 'st-warn'] : ['НИЗКО', 'st-bad'];
+  const contribLabel = (v) => v === null || v === undefined ? ['–', ''] : v >= 85 ? ['Оптимально', ''] : v >= 70 ? ['Хорошо', ''] : v >= 60 ? ['Обратите внимание', 'warn'] : ['Низко', 'bad'];
 
-  // ---- state & filters ----
-  const state = { days: 14, end: '', view: 'charts', data: null };
+  // ---------- Состояние ----------
+  const state = { screen: 'today', date: null, today: null, day: null, days: 14, view: 'charts', trends: null, status: null };
   try { state.days = Number(localStorage.getItem('days')) || 14; } catch {}
-  for (const b of $('#range').querySelectorAll('button')) {
-    b.setAttribute('aria-pressed', String(Number(b.dataset.days) === state.days));
-    b.onclick = () => { state.days = Number(b.dataset.days); try { localStorage.setItem('days', state.days); } catch {}; for (const x of $('#range').querySelectorAll('button')) x.setAttribute('aria-pressed', String(x === b)); load(); };
+
+  // ---------- Навигация ----------
+  for (const b of document.querySelectorAll('#tabs button')) b.onclick = () => showScreen(b.dataset.screen);
+  function showScreen(name) {
+    state.screen = name;
+    for (const b of document.querySelectorAll('#tabs button')) b.setAttribute('aria-selected', String(b.dataset.screen === name));
+    for (const s of document.querySelectorAll('.screen')) s.classList.toggle('on', s.id === 's-' + name);
+    $('#dayrow').classList.toggle('hidden', name === 'trends');
+    if (name === 'trends' && !state.trends) loadTrends();
+    if (name !== 'trends' && state.day) renderDay(state.day); // перерисовать графики под новую ширину
+    window.scrollTo({ top: 0 });
   }
-  $('#end').onchange = (e) => { state.end = e.target.value; load(); };
-  $('#reload').onclick = load;
-  for (const b of $('#view').querySelectorAll('button')) {
-    b.onclick = () => { state.view = b.dataset.view; for (const x of $('#view').querySelectorAll('button')) x.setAttribute('aria-pressed', String(x === b)); applyView(); };
-  }
-  function applyView() {
-    $('#charts').classList.toggle('hidden', state.view !== 'charts');
-    $('#kpis').classList.toggle('hidden', state.view !== 'charts');
-    $('#tablecard').classList.toggle('hidden', state.view !== 'table');
+  $('#prev').onclick = () => setDate(addDays(state.date, -1));
+  $('#next').onclick = () => { if (state.date < state.today) setDate(addDays(state.date, 1)); };
+  $('#daylabel').onclick = (e) => { if (e.target.id !== 'datepick') { const p = $('#datepick'); p.max = state.today; p.value = state.date; p.showPicker ? p.showPicker() : p.click(); } };
+  $('#datepick').onchange = (e) => { if (e.target.value && e.target.value <= state.today) setDate(e.target.value); };
+  function setDate(d) { state.date = d; updateDayLabel(); loadDay(); }
+  function updateDayLabel() {
+    $('#daytext').textContent = state.date === state.today ? 'Сегодня' : state.date === addDays(state.today, -1) ? 'Вчера' : dfull(state.date);
+    $('#daysub').textContent = dlong(state.date);
+    $('#next').style.visibility = state.date < state.today ? 'visible' : 'hidden';
   }
 
-  // ---- tooltip ----
+  // ---------- Тултип ----------
   const tip = $('#tip');
   function showTip(x, y, title, rows) {
-    tip.replaceChildren();
-    const d = document.createElement('div'); d.className = 'd'; d.textContent = title; tip.appendChild(d);
-    for (const r of rows) {
-      const row = document.createElement('div'); row.className = 'r';
-      const i = document.createElement('i'); i.style.background = r.color; row.appendChild(i);
-      const b = document.createElement('b'); b.textContent = r.value; row.appendChild(b);
-      const s = document.createElement('span'); s.textContent = r.name; row.appendChild(s);
-      tip.appendChild(row);
-    }
+    tip.replaceChildren(text('div', 'd', title));
+    for (const r of rows) { const row = text('div', 'r'); const i = document.createElement('i'); i.style.background = r.color; row.append(i, text('b', '', r.value), text('span', '', r.name)); tip.appendChild(row); }
     tip.style.display = 'block';
-    const w = tip.offsetWidth, h = tip.offsetHeight;
-    tip.style.left = Math.min(x + 14, innerWidth - w - 8) + 'px';
-    tip.style.top = Math.min(y + 14, innerHeight - h - 8) + 'px';
+    tip.style.left = Math.min(x + 14, innerWidth - tip.offsetWidth - 8) + 'px';
+    tip.style.top = Math.min(y + 14, innerHeight - tip.offsetHeight - 8) + 'px';
   }
   const hideTip = () => { tip.style.display = 'none'; };
 
-  // ---- chart primitives ----
+  // ---------- Примитивы графиков ----------
   const NS = 'http://www.w3.org/2000/svg';
-  const el = (tag, attrs = {}, text) => { const e = document.createElementNS(NS, tag); for (const [k, v] of Object.entries(attrs)) e.setAttribute(k, v); if (text !== undefined) e.textContent = text; return e; };
+  const el = (tag, attrs = {}, t) => { const e = document.createElementNS(NS, tag); for (const [k, v] of Object.entries(attrs)) e.setAttribute(k, v); if (t !== undefined) e.textContent = t; return e; };
   const niceTicks = (min, max, n = 4) => {
-    if (!(max > min)) { max = min + 1; }
+    if (!(max > min)) max = min + 1;
     const raw = (max - min) / n, p = 10 ** Math.floor(Math.log10(raw)), f = raw / p;
     const step = (f <= 1 ? 1 : f <= 2 ? 2 : f <= 5 ? 5 : 10) * p;
     const lo = Math.floor(min / step) * step, hi = Math.ceil(max / step) * step;
     const t = []; for (let v = lo; v <= hi + 1e-9; v += step) t.push(+v.toFixed(6));
     return { lo, hi, ticks: t };
   };
+  const noData = (svg) => svg.replaceChildren(el('text', { x: '50%', y: '50%', 'text-anchor': 'middle' }, 'Нет данных'));
   function frame(svg, days, yDomain, opts = {}) {
     svg.replaceChildren();
     const W = svg.clientWidth || 500, H = svg.clientHeight || 220;
-    const m = { l: 36, r: opts.right ?? 12, t: 10, b: 24 };
+    const m = { l: 34, r: opts.right ?? 12, t: 10, b: 24 };
     const { lo, hi, ticks } = niceTicks(yDomain[0], yDomain[1]);
     const x = (i) => m.l + (days.length <= 1 ? (W - m.l - m.r) / 2 : (i * (W - m.l - m.r)) / (days.length - 1));
     const xb = (i) => m.l + ((i + 0.5) * (W - m.l - m.r)) / days.length;
@@ -205,10 +352,9 @@ footer{margin-top:20px;font-size:12px;color:var(--muted)}
     days.forEach((d, i) => { const regular = i % every === 0 && (last - i >= every || i === last); if (regular || i === last) svg.appendChild(el('text', { x: opts.bars ? xb(i) : x(i), y: H - 6, 'text-anchor': 'middle' }, dstr(d))); });
     return { W, H, m, x, xb, y, lo, hi };
   }
-  // multi-line chart with crosshair tooltip
   function lineChart(svg, days, series, opts = {}) {
     const vals = series.flatMap((s) => s.values).filter((v) => v !== null && v !== undefined);
-    if (!days.length || !vals.length) { svg.replaceChildren(el('text', { x: '50%', y: '50%', 'text-anchor': 'middle' }, 'Нет данных')); return; }
+    if (!days.length || !vals.length) return noData(svg);
     const dom = opts.domain ?? [Math.min(...vals, opts.baseline ?? Infinity), Math.max(...vals, opts.baseline ?? -Infinity)];
     const pad = (dom[1] - dom[0]) * 0.1 || 1;
     const f = frame(svg, days, [opts.domain ? dom[0] : dom[0] - pad, opts.domain ? dom[1] : dom[1] + pad], { right: 44 });
@@ -222,19 +368,17 @@ footer{margin-top:20px;font-size:12px;color:var(--muted)}
       let d = '', started = false;
       pts[si].forEach((p) => { if (!p) { started = false; return; } d += (started ? 'L' : 'M') + p[0] + ' ' + p[1]; started = true; });
       if (opts.area && series.length === 1) {
-        // one closed shape per contiguous run of points, so a gap stays a gap
         let seg = [];
         const flush = () => { if (seg.length > 1) svg.appendChild(el('path', { d: 'M' + seg.map((p) => p[0] + ' ' + p[1]).join('L') + `L${seg[seg.length - 1][0]} ${f.y(f.lo)}L${seg[0][0]} ${f.y(f.lo)}Z`, fill: css('--wash'), stroke: 'none' })); seg = []; };
         pts[si].forEach((p) => { if (p) seg.push(p); else flush(); });
         flush();
       }
       svg.appendChild(el('path', { d, fill: 'none', stroke: color, 'stroke-width': 2, 'stroke-linejoin': 'round', 'stroke-linecap': 'round' }));
-      // single points (no neighbours) still need a mark
       pts[si].forEach((p, i) => { if (p && !pts[si][i - 1] && !pts[si][i + 1]) svg.appendChild(el('circle', { cx: p[0], cy: p[1], r: 4, fill: color, stroke: css('--surface'), 'stroke-width': 2 })); });
       const li = s.values.length - 1, lv = s.values[li];
       if (lv !== null && lv !== undefined && pts[si][li]) {
         svg.appendChild(el('circle', { cx: pts[si][li][0], cy: pts[si][li][1], r: 4, fill: color, stroke: css('--surface'), 'stroke-width': 2 }));
-        svg.appendChild(el('text', { x: pts[si][li][0] + 8, y: pts[si][li][1] + 4 + (opts.baseline !== undefined && Math.abs(f.y(opts.baseline) - pts[si][li][1]) < 12 ? (pts[si][li][1] <= f.y(opts.baseline) ? -10 : 10) : 0) + (series.length > 1 ? (si ? 8 : -6) : 0), class: 'lbl' }, fmt(lv, s.digits ?? 0)));
+        svg.appendChild(el('text', { x: pts[si][li][0] + 8, y: pts[si][li][1] + 4 + (series.length > 1 ? (si ? 8 : -6) : 0), class: 'lbl' }, fmt(lv, s.digits ?? 0)));
       }
     });
     const xhair = el('line', { class: 'xhair', y1: f.m.t, y2: f.H - f.m.b, style: 'display:none' });
@@ -242,44 +386,34 @@ footer{margin-top:20px;font-size:12px;color:var(--muted)}
     const dots = series.map((s) => { const c = el('circle', { r: 5, fill: css(s.color), stroke: css('--surface'), 'stroke-width': 2, style: 'display:none', 'pointer-events': 'none' }); svg.appendChild(c); return c; });
     const hit = el('rect', { class: 'hit', x: f.m.l, y: 0, width: f.W - f.m.l - f.m.r, height: f.H });
     svg.appendChild(hit);
-    const move = (ev) => {
+    hit.addEventListener('pointermove', (ev) => {
       const r = svg.getBoundingClientRect();
-      const px = ev.clientX - r.left;
-      const i = Math.max(0, Math.min(days.length - 1, Math.round(((px - f.m.l) / (f.W - f.m.l - f.m.r)) * (days.length - 1))));
+      const i = Math.max(0, Math.min(days.length - 1, Math.round((((ev.clientX - r.left) - f.m.l) / (f.W - f.m.l - f.m.r)) * (days.length - 1))));
       xhair.setAttribute('x1', f.x(i)); xhair.setAttribute('x2', f.x(i)); xhair.style.display = '';
       series.forEach((s, si) => { const p = pts[si][i]; if (p) { dots[si].setAttribute('cx', p[0]); dots[si].setAttribute('cy', p[1]); dots[si].style.display = ''; } else dots[si].style.display = 'none'; });
       showTip(ev.clientX, ev.clientY, dfull(days[i]), series.map((s) => ({ color: css(s.color), value: fmt(s.values[i], s.digits ?? 0) + (s.unit ? ' ' + s.unit : ''), name: s.name })));
-    };
-    hit.addEventListener('pointermove', move);
+    });
     hit.addEventListener('pointerleave', () => { xhair.style.display = 'none'; dots.forEach((d) => (d.style.display = 'none')); hideTip(); });
   }
-  // stacked / single columns with per-mark tooltip
   function columnChart(svg, days, series, opts = {}) {
     const totals = days.map((_, i) => series.reduce((s, x) => s + (x.values[i] || 0), 0));
-    if (!days.length || !totals.some((t) => t > 0)) { svg.replaceChildren(el('text', { x: '50%', y: '50%', 'text-anchor': 'middle' }, 'Нет данных')); return; }
+    if (!days.length || !totals.some((t) => t > 0)) return noData(svg);
     const f = frame(svg, days, [0, Math.max(...totals)], { bars: true });
     const slot = (f.W - f.m.l - f.m.r) / days.length;
-    const bw = Math.min(24, Math.max(3, slot - 4));
-    const GAP = 2;
+    const bw = Math.min(24, Math.max(3, slot - 4)), GAP = 2;
     days.forEach((d, i) => {
-      let acc = 0;
-      const cx = f.xb(i);
+      let acc = 0; const cx = f.xb(i);
       series.forEach((s, si) => {
-        const v = s.values[i] || 0;
-        if (v <= 0) return;
+        const v = s.values[i] || 0; if (v <= 0) return;
         const y0 = f.y(acc), y1 = f.y(acc + v);
         const isTop = series.slice(si + 1).every((x) => !(x.values[i] > 0));
         let top = y1, h = y0 - y1;
         if (acc > 0) { top += GAP / 2; h -= GAP / 2; }
         if (!isTop) h -= GAP / 2;
         h = Math.max(h, 0.5);
-        const r = isTop ? Math.min(4, h / 2, bw / 2) : 0;
-        const x0 = cx - bw / 2;
-        const path = isTop
-          ? `M${x0} ${top + h}V${top + r}Q${x0} ${top} ${x0 + r} ${top}H${x0 + bw - r}Q${x0 + bw} ${top} ${x0 + bw} ${top + r}V${top + h}Z`
-          : `M${x0} ${top}H${x0 + bw}V${top + h}H${x0}Z`;
-        const p = el('path', { d: path, fill: css(s.color), class: 'bar' });
-        svg.appendChild(p);
+        const r = isTop ? Math.min(4, h / 2, bw / 2) : 0, x0 = cx - bw / 2;
+        const path = isTop ? `M${x0} ${top + h}V${top + r}Q${x0} ${top} ${x0 + r} ${top}H${x0 + bw - r}Q${x0 + bw} ${top} ${x0 + bw} ${top + r}V${top + h}Z` : `M${x0} ${top}H${x0 + bw}V${top + h}H${x0}Z`;
+        svg.appendChild(el('path', { d: path, fill: css(s.color), class: 'bar' }));
         acc += v;
       });
       const hit = el('rect', { class: 'hit', x: cx - slot / 2, y: f.m.t, width: slot, height: f.H - f.m.t - f.m.b });
@@ -291,146 +425,290 @@ footer{margin-top:20px;font-size:12px;color:var(--muted)}
       hit.addEventListener('pointerleave', hideTip);
       svg.appendChild(hit);
     });
-    // label the maximum only
     const mi = totals.indexOf(Math.max(...totals));
     svg.appendChild(el('text', { x: f.xb(mi), y: f.y(totals[mi]) - 6, 'text-anchor': 'middle', class: 'lbl' }, fmt(totals[mi], series[0].digits ?? 0)));
   }
   function legend(node, items, kind = 'line') {
     node.replaceChildren();
-    for (const it of items) { const s = document.createElement('span'); const i = document.createElement('i'); i.className = kind === 'rect' ? 'rect' : ''; i.style.background = css(it.color); s.appendChild(i); s.appendChild(document.createTextNode(it.name)); node.appendChild(s); }
+    for (const it of items) { const s = document.createElement('span'); const i = document.createElement('i'); i.className = kind === 'rect' ? 'rect' : ''; i.style.background = css(it.color); s.append(i, document.createTextNode(it.name)); node.appendChild(s); }
   }
   function spark(values, accent) {
-    const svg = el('svg', { viewBox: '0 0 100 28', preserveAspectRatio: 'none' });
+    const svg = el('svg', { viewBox: '0 0 100 30', preserveAspectRatio: 'none', class: 'spark' });
     const v = values.filter((x) => x !== null && x !== undefined);
     if (v.length < 2) return svg;
     const lo = Math.min(...v), hi = Math.max(...v);
-    const pts = values.map((x, i) => (x === null || x === undefined ? null : [(i * 100) / (values.length - 1), 26 - ((x - lo) / (hi - lo || 1)) * 22]));
+    const pts = values.map((x, i) => (x === null || x === undefined ? null : [(i * 100) / (values.length - 1), 27 - ((x - lo) / (hi - lo || 1)) * 22]));
     let d = '', st = false; pts.forEach((p) => { if (!p) { st = false; return; } d += (st ? 'L' : 'M') + p[0] + ' ' + p[1]; st = true; });
     svg.appendChild(el('path', { d, fill: 'none', stroke: css('--deemph'), 'stroke-width': 2, 'vector-effect': 'non-scaling-stroke', 'stroke-linejoin': 'round' }));
     const last = [...pts].reverse().find(Boolean);
     if (last) svg.appendChild(el('circle', { cx: last[0], cy: last[1], r: 3, fill: css(accent), 'vector-effect': 'non-scaling-stroke' }));
     return svg;
   }
-  function tile(label, value, unit, delta, values, opts = {}) {
-    const t = document.createElement('div'); t.className = 'tile';
-    const l = document.createElement('div'); l.className = 'label'; l.textContent = label; t.appendChild(l);
-    const v = document.createElement('div'); v.className = 'value'; v.textContent = value; if (unit) { const s = document.createElement('small'); s.textContent = unit; v.appendChild(s); } t.appendChild(v);
-    const d = document.createElement('div'); d.className = 'delta';
-    if (delta && delta.value !== null && delta.value !== undefined && !Number.isNaN(delta.value)) {
-      const up = delta.value > 0;
-      const good = delta.value === 0 ? null : (opts.upIsGood === false ? !up : up);
-      d.className += good === null ? '' : good ? ' up' : ' down';
-      d.textContent = `${up ? '+' : ''}${fmt(delta.value, delta.digits ?? 0)}${delta.unit || ''} ${delta.label}`;
-    } else d.textContent = delta ? delta.label : '';
-    t.appendChild(d);
-    if (values) t.appendChild(spark(values, '--s1'));
-    return t;
+  /** Series-in-time chart for one day: samples with fraction-of-day x, coloured by class. */
+  function dayChart(svg, samples, opts) {
+    svg.replaceChildren();
+    const vals = samples.map((s) => s.v).filter((v) => typeof v === 'number');
+    if (!vals.length) return noData(svg);
+    const W = svg.clientWidth || 500, H = svg.clientHeight || 220, m = { l: 34, r: 10, t: 10, b: 22 };
+    const { lo, hi, ticks } = niceTicks(Math.min(...vals, opts.min ?? Infinity), Math.max(...vals, opts.max ?? -Infinity));
+    const x = (fr) => m.l + fr * (W - m.l - m.r), y = (v) => m.t + (H - m.t - m.b) * (1 - (v - lo) / (hi - lo || 1));
+    const g = el('g', { class: 'grid' });
+    for (const t of ticks) { g.appendChild(el('line', { x1: m.l, x2: W - m.r, y1: y(t), y2: y(t) })); svg.appendChild(el('text', { x: m.l - 6, y: y(t) + 4, 'text-anchor': 'end' }, fmt(t))); }
+    svg.appendChild(g);
+    svg.appendChild(el('line', { class: 'axis', x1: m.l, x2: W - m.r, y1: y(lo), y2: y(lo) }));
+    for (const h of opts.hours ?? [0, 6, 12, 18, 24]) svg.appendChild(el('text', { x: x(h / 24), y: H - 5, 'text-anchor': h === 0 ? 'start' : h === 24 ? 'end' : 'middle' }, String(h).padStart(2, '0')));
+    // marks
+    const bw = Math.max(2, Math.min(4, (W - m.l - m.r) / Math.max(1, samples.length) - 1));
+    for (const s of samples) {
+      if (typeof s.v !== 'number') continue;
+      svg.appendChild(el('rect', { x: x(s.t) - bw / 2, y: y(s.v) - 3, width: bw, height: 6, rx: bw / 2, fill: css(s.color) }));
+    }
+    // smoothed line
+    const win = opts.smooth ?? 5;
+    const ordered = samples.filter((s) => typeof s.v === 'number');
+    let d = '';
+    ordered.forEach((s, i) => {
+      const slice = ordered.slice(Math.max(0, i - win), i + win + 1).filter((o) => Math.abs(o.t - s.t) < (win * 6) / 1440);
+      const avg = slice.reduce((a, o) => a + o.v, 0) / slice.length;
+      const gap = i > 0 && s.t - ordered[i - 1].t > 30 / 1440;
+      d += (i === 0 || gap ? 'M' : 'L') + x(s.t) + ' ' + y(avg);
+    });
+    svg.appendChild(el('path', { d, fill: 'none', stroke: css('--ink'), 'stroke-width': 1.5, 'stroke-linejoin': 'round', 'stroke-linecap': 'round', opacity: .85 }));
+    const xhair = el('line', { class: 'xhair', y1: m.t, y2: H - m.b, style: 'display:none' });
+    svg.appendChild(xhair);
+    const hit = el('rect', { class: 'hit', x: m.l, y: 0, width: W - m.l - m.r, height: H });
+    svg.appendChild(hit);
+    hit.addEventListener('pointermove', (ev) => {
+      const r = svg.getBoundingClientRect(), fr = ((ev.clientX - r.left) - m.l) / (W - m.l - m.r);
+      let best = null; for (const s of ordered) if (!best || Math.abs(s.t - fr) < Math.abs(best.t - fr)) best = s;
+      if (!best) return;
+      xhair.setAttribute('x1', x(best.t)); xhair.setAttribute('x2', x(best.t)); xhair.style.display = '';
+      showTip(ev.clientX, ev.clientY, best.label, [{ color: css(best.color), value: fmt(best.v) + ' ' + (opts.unit || ''), name: best.name }]);
+    });
+    hit.addEventListener('pointerleave', () => { xhair.style.display = 'none'; hideTip(); });
+  }
+  /** Hypnogram from the 5-min phase string (1 deep, 2 light, 3 REM, 4 awake). */
+  function hypnogram(svg, phases, start) {
+    svg.replaceChildren();
+    if (!phases) return noData(svg);
+    const W = svg.clientWidth || 500, H = svg.clientHeight || 150, m = { l: 62, r: 8, t: 8, b: 20 };
+    const rows = [['4', 'Бодрств.', '--awake'], ['3', 'REM', '--rem'], ['2', 'Лёгкий', '--light'], ['1', 'Глубокий', '--deep']];
+    const rh = (H - m.t - m.b) / rows.length, n = phases.length, cw = (W - m.l - m.r) / n;
+    rows.forEach(([, name], ri) => svg.appendChild(el('text', { x: m.l - 8, y: m.t + ri * rh + rh / 2 + 4, 'text-anchor': 'end' }, name)));
+    const startMs = start ? Date.parse(start) : null;
+    let run = null;
+    const flush = () => { if (!run) return; const ri = rows.findIndex((r) => r[0] === run.c); if (ri >= 0) { const rect = el('rect', { x: m.l + run.i * cw, y: m.t + ri * rh + 3, width: Math.max(cw * run.n, 1), height: rh - 6, rx: 3, fill: css(rows[ri][2]), class: 'bar' }); const off = offMs(start); const from = startMs ? clockAt(startMs + run.i * 300000, off) : '', to = startMs ? clockAt(startMs + (run.i + run.n) * 300000, off) : ''; rect.addEventListener('pointermove', (ev) => showTip(ev.clientX, ev.clientY, `${from} – ${to}`, [{ color: css(rows[ri][2]), value: `${run.n * 5} мин`, name: rows[ri][1] }])); rect.addEventListener('pointerleave', hideTip); svg.appendChild(rect); } run = null; };
+    for (let i = 0; i < n; i++) { const c = phases[i]; if (run && run.c === c) run.n++; else { flush(); run = { c, i, n: 1 }; } }
+    flush();
+    if (startMs) for (let h = 0; ; h++) { const t = startMs + h * 3600000; if (t > startMs + n * 300000) break; const fr = (h * 12) / n; if (h % 2 === 0) svg.appendChild(el('text', { x: m.l + fr * (W - m.l - m.r), y: H - 4, 'text-anchor': 'middle' }, clockAt(t, offMs(start)))); }
+  }
+  function card(title, value, unit, note, badge, sparkVals) {
+    const c = text('div', 'card');
+    const t = text('div', 't', title); if (badge) { const b = text('span', 'badge ' + (badge[1] || ''), badge[0]); t.appendChild(b); }
+    const v = text('div', 'v', value); if (unit) v.appendChild(text('small', '', unit));
+    c.append(t, v);
+    if (note) c.appendChild(text('div', 'n', note));
+    if (sparkVals) c.appendChild(spark(sparkVals, '--blue'));
+    return c;
+  }
+  function contribRows(node, obj, names) {
+    node.replaceChildren();
+    const entries = Object.entries(names).filter(([k]) => obj && obj[k] !== undefined);
+    if (!entries.length) { node.appendChild(text('div', 'n', 'Нет данных за этот день')); return; }
+    for (const [k, name] of entries) {
+      const v = obj[k]; const [lab, cls] = contribLabel(v);
+      const row = text('div', 'row'); const line = text('div', 'line'); line.append(text('span', '', name), text('span', 'val ' + (cls ? 'st-' + cls : ''), lab));
+      const bar = text('div', 'bar'); const i = document.createElement('i'); i.className = cls; i.style.width = (v ?? 0) + '%'; bar.appendChild(i);
+      row.append(line, bar); node.appendChild(row);
+    }
+  }
+  function hero(node, kicker, score, title, body, extra) {
+    node.replaceChildren();
+    const k = text('div', 'kicker', kicker); node.appendChild(k);
+    const [lab, cls] = scoreLabel(score);
+    const s = text('div', 'score'); s.append(text('b', '', score === null || score === undefined ? '–' : String(score)), text('span', cls, lab)); node.appendChild(s);
+    node.appendChild(text('h2', '', title));
+    node.appendChild(text('p', '', body));
+    if (extra) node.appendChild(extra);
   }
 
-  // ---- data ----
-  async function load() {
+  // ---------- Загрузка ----------
+  async function api(path) {
+    const r = await fetch(path, { cache: 'no-store' });
+    if (r.status === 401) { location.href = '/login'; throw new Error('unauthorized'); }
+    if (r.status === 409) { showEmpty(); throw new Error('not_connected'); }
+    const data = await r.json();
+    if (!r.ok) { showError(data.error || r.statusText, data.errors); throw new Error(data.error || r.statusText); }
+    return data;
+  }
+  async function loadDay() {
     document.body.classList.add('loading');
-    try {
-      const q = new URLSearchParams({ days: state.days }); if (state.end) q.set('end_date', state.end);
-      const r = await fetch('/api/dashboard?' + q, { cache: 'no-store' });
-      if (r.status === 401) { location.href = '/login'; return; }
-      if (r.status === 409) { showEmpty(); return; }
-      const data = await r.json();
-      if (!r.ok) { showError(data.error || r.statusText, data.errors); return; }
-      state.data = data;
-      $('#empty').classList.add('hidden'); $('#content').classList.remove('hidden');
-      render(data);
-    } catch (e) { showError(e.message); }
+    try { state.day = await api('/api/day?date=' + state.date); $('#empty').classList.add('hidden'); renderDay(state.day); }
+    catch (e) { if (!['unauthorized', 'not_connected'].includes(e.message) && !$('#empty').textContent) showError(e.message); }
     finally { document.body.classList.remove('loading'); }
   }
-  async function status() {
-    try {
-      const r = await fetch('/api/status', { cache: 'no-store' });
-      if (r.status === 401) { location.href = '/login'; return null; }
-      const s = await r.json();
-      $('#status').textContent = s.connected ? 'Oura подключена' : 'Oura не подключена';
-      $('#logout').classList.toggle('hidden', false);
-      state.status = s;
-      return s;
-    } catch { return null; }
+  async function loadTrends() {
+    document.body.classList.add('loading');
+    try { state.trends = await api('/api/dashboard?days=' + state.days); renderTrends(state.trends); }
+    catch (e) { /* показано в showError */ }
+    finally { document.body.classList.remove('loading'); }
   }
   function showEmpty() {
-    const e = $('#empty'); e.replaceChildren();
-    const h = document.createElement('div'); h.style.fontSize = '18px'; h.style.fontWeight = '600'; h.textContent = 'Аккаунт Oura ещё не подключён'; e.appendChild(h);
-    if (state.status?.can_connect) {
-      const p = document.createElement('div'); p.textContent = 'Нажмите кнопку, разрешите доступ на cloud.ouraring.com, и дашборд заполнится.'; e.appendChild(p);
-      const a = document.createElement('a'); a.href = '/connect'; a.textContent = 'Подключить Oura'; a.className = 'primary'; a.style.cssText = 'display:inline-block;padding:10px 18px;border-radius:8px;background:var(--s1);color:#fff;text-decoration:none'; e.appendChild(a);
-    } else {
-      const p = document.createElement('div'); p.textContent = 'На сервере не заданы OURA_CLIENT_ID / OURA_CLIENT_SECRET (или задайте OURA_ACCESS_TOKEN).'; e.appendChild(p);
-    }
-    e.classList.remove('hidden'); $('#content').classList.add('hidden');
+    const e = $('#empty'); e.replaceChildren(text('div', '', 'Аккаунт Oura ещё не подключён'));
+    e.firstChild.style.cssText = 'font-family:var(--serif);font-size:24px';
+    if (state.status?.can_connect) { e.appendChild(text('div', '', 'Нажмите кнопку, разрешите доступ на cloud.ouraring.com, и дашборд заполнится.')); const a = text('a', 'btn', 'Подключить Oura'); a.href = '/connect'; e.appendChild(a); }
+    else e.appendChild(text('div', '', 'На сервере не заданы OURA_CLIENT_ID / OURA_CLIENT_SECRET.'));
+    e.classList.remove('hidden');
   }
   function showError(msg, errors) {
-    const e = $('#empty'); e.replaceChildren();
-    const h = document.createElement('div'); h.style.fontWeight = '600'; h.textContent = 'Не удалось получить данные'; e.appendChild(h);
-    const p = document.createElement('pre'); p.style.cssText = 'white-space:pre-wrap;font-size:12px;color:var(--ink2);text-align:left'; p.textContent = msg + (errors ? '\n' + JSON.stringify(errors, null, 2) : ''); e.appendChild(p);
-    e.classList.remove('hidden'); $('#content').classList.add('hidden');
+    const e = $('#empty'); e.replaceChildren(text('div', '', 'Не удалось получить данные'));
+    const p = text('pre', '', msg + (errors ? '\n' + JSON.stringify(errors, null, 2) : '')); p.style.cssText = 'white-space:pre-wrap;font-size:12px;color:var(--ink2);text-align:left';
+    e.appendChild(p); e.classList.remove('hidden');
   }
 
-  // ---- render ----
-  function render(data) {
+  // ---------- Экраны дня ----------
+  function mainSleep(periods) { const long = periods.filter((p) => p.type === 'long_sleep'); return (long.length ? long : periods).sort((a, b) => (b.total_sleep_duration || 0) - (a.total_sleep_duration || 0))[0]; }
+  function weakest(contrib, dict) {
+    const e = Object.entries(contrib || {}).filter(([k, v]) => dict[k] && typeof v === 'number').sort((a, b) => a[1] - b[1]);
+    return e.length && e[0][1] < 70 ? e[0][0] : null;
+  }
+  function renderDay(d) {
+    const r = d.readiness[0], ds = d.daily_sleep[0], sp = mainSleep(d.sleep), a = d.activity[0], st = d.stress[0], spo = d.spo2[0];
+    const isToday = d.date === d.today;
+    // --- Сегодня ---
+    const w = weakest(r?.contributors, READY);
+    const [t, body] = !r ? ['Нет данных', isToday ? 'Кольцо ещё не синхронизировалось за сегодня. Откройте приложение Oura и подождите минуту.' : 'За этот день Oura не записала готовность: кольцо не носили или оно было разряжено.']
+      : w ? ADVICE[w] : r.score >= 85 ? ['Отличная форма', 'Все показатели в вашей норме. Хороший день для серьёзной тренировки или большой задачи.'] : ['Хорошее восстановление', 'Показатели в норме. День подходит для обычной нагрузки.'];
+    hero($('#hero-ready'), `Готовность · ${dfull(d.date)}`, r?.score ?? null, t, body);
+    const cards = $('#today-cards'); cards.replaceChildren();
+    cards.appendChild(card('Сон', fmt(ds?.score), '', sp ? hm(sp.total_sleep_duration) : 'нет данных', scoreLabel(ds?.score)));
+    cards.appendChild(card('Активность', fmt(a?.score), '', a ? `${fmt(a.steps)} шагов · ${fmt(a.active_calories)} ккал` : 'нет данных', scoreLabel(a?.score)));
+    cards.appendChild(card('HRV во сне', fmt(sp?.average_hrv), 'мс', r?.contributors ? contribLabel(r.contributors.hrv_balance)[0] : ''));
+    cards.appendChild(card('Пульс покоя', fmt(sp?.lowest_heart_rate), 'уд/мин', sp ? `средний за ночь ${fmt(sp.average_heart_rate)}` : ''));
+    cards.appendChild(card('Температура', r?.temperature_deviation === null || r?.temperature_deviation === undefined ? '–' : (r.temperature_deviation > 0 ? '+' : '') + fmt(r.temperature_deviation, 2), '°', 'отклонение от вашей нормы'));
+    cards.appendChild(card('Стресс', st ? fmt((st.stress_high || 0) / 60) : '–', 'мин', st ? `восстановление ${fmt((st.recovery_high || 0) / 60)} мин · ${{ restored: 'восстановленный день', normal: 'обычный день', stressful: 'напряжённый день' }[st.day_summary] || ''}` : 'нет данных'));
+    if (spo?.spo2_percentage?.average) cards.appendChild(card('SpO2 во сне', fmt(spo.spo2_percentage.average, 1), '%', 'средняя сатурация'));
+    if (d.workouts.length) cards.appendChild(card('Тренировки', String(d.workouts.length), '', d.workouts.map((x) => x.activity).join(', ')));
+    contribRows($('#ready-contrib'), r?.contributors, READY);
+
+    // --- Сон ---
+    const ws = weakest(ds?.contributors, SLEEPC);
+    const [st1, sb1] = !sp ? ['Нет данных о сне', 'За эту ночь Oura не записала сон.'] : ws ? SLEEP_ADVICE[ws] : (ds?.score ?? 0) >= 85 ? ['Отличная ночь', 'Сон был долгим и спокойным. Тело хорошо восстановилось.'] : ['Хорошая ночь', 'Сон в вашей норме. Небольшие колебания фаз — обычное дело.'];
+    const kv = text('div', 'kv');
+    if (sp) for (const [k, v] of [['Легли', tm(sp.bedtime_start)], ['Встали', tm(sp.bedtime_end)], ['В кровати', hm(sp.time_in_bed)], ['Сон', hm(sp.total_sleep_duration)], ['Эффективность', fmt(sp.efficiency) + ' %'], ['Засыпание', fmt((sp.latency || 0) / 60) + ' мин'], ['Дыхание', fmt(sp.average_breath, 1) + ' /мин'], ['Пробуждения', hm(sp.awake_time)]]) { const row = text('div'); row.append(text('span', '', k), text('b', '', v)); kv.appendChild(row); }
+    hero($('#hero-sleep'), `Сон · ночь на ${dfull(d.date)}`, ds?.score ?? null, st1, sb1, sp ? kv : null);
+    hypnogram($('#c-hypno'), sp?.sleep_phase_5_min, sp?.bedtime_start);
+    const stages = $('#stages'); stages.replaceChildren();
+    if (sp) {
+      const total = sp.time_in_bed || 1;
+      for (const [name, key, color] of [['Глубокий', 'deep_sleep_duration', '--deep'], ['Лёгкий', 'light_sleep_duration', '--light'], ['REM', 'rem_sleep_duration', '--rem'], ['Бодрств.', 'awake_time', '--awake']]) {
+        const s = text('div', 's'); const b = text('div', 'b'); const i = document.createElement('i'); i.style.width = Math.round(((sp[key] || 0) / total) * 100) + '%'; i.style.background = css(color); b.appendChild(i);
+        s.append(text('span', '', name), b, text('span', 'd', hm(sp[key]))); stages.appendChild(s);
+      }
+    }
+    const series = (obj, color, name, unit) => {
+      if (!obj?.items?.length || !sp?.bedtime_start) return [];
+      const t0 = Date.parse(sp.bedtime_start), iv = (obj.interval || 300) * 1000, dur = (sp.time_in_bed || obj.items.length * (obj.interval || 300)) * 1000;
+      const off = offMs(sp.bedtime_start);
+      return obj.items.map((v, i) => ({ t: (i * iv) / dur, v: typeof v === 'number' ? v : null, color, name, label: clockAt(t0 + i * iv, off) }));
+    };
+    const hoursOf = (sp) => sp ? [...Array(Math.floor((sp.time_in_bed || 0) / 3600) + 1).keys()] : [];
+    const nightChart = (svg, samples, unit) => {
+      if (!sp || !samples.length) return noData(svg);
+      dayChartNight(svg, samples, unit);
+    };
+    function dayChartNight(svg, samples, unit) { // same as dayChart but x-labels are clock times across the night
+      const t0 = Date.parse(sp.bedtime_start), dur = (sp.time_in_bed || 1) * 1000;
+      dayChart(svg, samples, { unit, hours: [], smooth: 2 });
+      const W = svg.clientWidth || 500, H = svg.clientHeight || 150, m = { l: 34, r: 10 };
+      for (let h = 0; h * 3600000 <= dur; h += 2) svg.appendChild(el('text', { x: m.l + (h * 3600000 / dur) * (W - m.l - m.r), y: H - 5, 'text-anchor': 'middle' }, clockAt(t0 + h * 3600000, offMs(sp.bedtime_start))));
+    }
+    nightChart($('#c-sleep-hr'), series(sp?.heart_rate, '--sleep', 'Пульс', 'уд/мин'), 'уд/мин');
+    nightChart($('#c-sleep-hrv'), series(sp?.hrv, '--rem', 'HRV', 'мс'), 'мс');
+    contribRows($('#sleep-contrib'), ds?.contributors, SLEEPC);
+
+    // --- Пульс ---
+    const dayStart = Date.parse(d.day_start), dayLen = Date.parse(d.day_end) - dayStart;
+    const wins = d.workouts.map((x) => [Date.parse(x.start_datetime), Date.parse(x.end_datetime), x.activity]);
+    const hrs = d.heart_rate.map((s) => {
+      const ts = Date.parse(s.timestamp); const inW = wins.find(([a, b]) => ts >= a && ts <= b);
+      const cls = s.source === 'sleep' ? ['--sleep', 'Сон'] : (s.source === 'workout' || inW) ? ['--act', 'Тренировка' + (inW ? ': ' + inW[2] : '')] : ['--hr-awake', s.source === 'rest' ? 'Отдых' : 'Бодрствование'];
+      return { t: (ts - dayStart) / dayLen, v: s.bpm, color: cls[0], name: cls[1], label: clockAt(ts, offMs(d.day_start)) };
+    }).filter((s) => s.t >= 0 && s.t <= 1).sort((a, b) => a.t - b.t);
+    const bySrc = (pred) => hrs.filter(pred).map((s) => s.v);
+    const rng = (arr) => arr.length ? `${Math.min(...arr)}–${Math.max(...arr)}` : '–';
+    const sleepBpm = bySrc((s) => s.color === '--sleep'), actBpm = bySrc((s) => s.color === '--act'), awakeBpm = bySrc((s) => s.color === '--hr-awake');
+    const last = hrs[hrs.length - 1];
+    const dayMin = awakeBpm.length ? Math.min(...awakeBpm) : null;
+    hero($('#hero-hr'), `Пульс · ${dfull(d.date)}`, null, last ? `${last.v} уд/мин` : 'Нет данных', last ? `Последнее измерение в ${last.label}. Во сне ${rng(sleepBpm)}, днём ${rng(awakeBpm)}${actBpm.length ? `, на тренировке ${rng(actBpm)}` : ''}.` : 'Кольцо ещё не передало пульс за этот день.');
+    $('#hero-hr .score').remove();
+    dayChart($('#c-hr-day'), hrs, { unit: 'уд/мин', min: 40, max: 120 });
+    const hc = $('#hr-cards'); hc.replaceChildren();
+    hc.appendChild(card('Во сне', rng(sleepBpm), 'уд/мин', 'диапазон за ночь'));
+    hc.appendChild(card('Днём', rng(awakeBpm), 'уд/мин', dayMin ? `минимум ${dayMin}` : ''));
+    hc.appendChild(card('Тренировка', actBpm.length ? rng(actBpm) : '–', 'уд/мин', d.workouts.length ? `${d.workouts.length} за день` : 'не было'));
+    hc.appendChild(card('Стресс', st ? fmt((st.stress_high || 0) / 60) : '–', 'мин', st ? `восстановление ${fmt((st.recovery_high || 0) / 60)} мин` : 'нет данных'));
+    const wo = $('#workouts'); wo.replaceChildren();
+    if (!d.workouts.length) wo.appendChild(text('div', 'n', 'Тренировок не записано.'));
+    for (const x of d.workouts) { const row = text('div', 'line'); row.style.cssText = 'display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border)'; const min = Math.round((Date.parse(x.end_datetime) - Date.parse(x.start_datetime)) / 60000); row.append(text('span', '', `${x.activity}${x.label ? ' · ' + x.label : ''}`), text('span', 'n', `${clockAt(Date.parse(x.start_datetime), offMs(d.day_start))} · ${min} мин · ${{ easy: 'легко', moderate: 'умеренно', hard: 'тяжело' }[x.intensity] || x.intensity || ''}${x.calories ? ' · ' + fmt(x.calories) + ' ккал' : ''}`)); wo.appendChild(row); }
+
+    const errs = Object.entries(d.errors || {});
+    $('#warn').textContent = errs.length ? 'Недоступно: ' + errs.map(([k, v]) => `${k} (${v.replace(/^Oura API /, '').slice(0, 80)})`).join('; ') : '';
+    $('#foot').textContent = `Обновлено ${new Date(d.generated_at).toLocaleString('ru-RU')}. Это данные кольца, а не медицинская диагностика.`;
+  }
+
+  // ---------- Тренды ----------
+  for (const b of $('#range').querySelectorAll('button')) {
+    b.setAttribute('aria-pressed', String(Number(b.dataset.days) === state.days));
+    b.onclick = () => { state.days = Number(b.dataset.days); try { localStorage.setItem('days', state.days); } catch {}; for (const x of $('#range').querySelectorAll('button')) x.setAttribute('aria-pressed', String(x === b)); loadTrends(); };
+  }
+  for (const b of $('#view').querySelectorAll('button')) b.onclick = () => { state.view = b.dataset.view; for (const x of $('#view').querySelectorAll('button')) x.setAttribute('aria-pressed', String(x === b)); applyView(); };
+  function applyView() { $('#charts').classList.toggle('hidden', state.view !== 'charts'); $('#kpis').classList.toggle('hidden', state.view !== 'charts'); $('#tablecard').classList.toggle('hidden', state.view !== 'table'); }
+  function renderTrends(data) {
     const rows = data.rows, days = rows.map((r) => r.day), latest = data.latest, avg = data.averages;
     const col = (k) => rows.map((r) => r[k]);
-    const dl = (a, b) => (a === null || b === null || a === undefined || b === null) ? null : a - b;
-
+    const dl = (a, b) => (a === null || b === null || a === undefined || b === undefined) ? null : a - b;
+    const delta = (v, unit, digits, upGood = true) => v === null || v === undefined ? '' : [`${v > 0 ? '+' : ''}${fmt(v, digits)}${unit || ''} к среднему`, v === 0 ? '' : (upGood ? v > 0 : v < 0) ? 'st-good' : 'st-bad'];
     const k = $('#kpis'); k.replaceChildren();
-    k.appendChild(tile('Готовность', fmt(latest?.readiness_score), '', { value: dl(latest?.readiness_score, avg.readiness_score), label: 'к среднему' }, col('readiness_score')));
-    k.appendChild(tile('Сон, балл', fmt(latest?.sleep_score), '', { value: dl(latest?.sleep_score, avg.sleep_score), label: 'к среднему' }, col('sleep_score')));
-    k.appendChild(tile('HRV', fmt(latest?.avg_hrv_ms), 'мс', { value: data.hrv.latest_vs_mean_pct, unit: '%', label: 'к среднему', digits: 1 }, col('avg_hrv_ms')));
-    k.appendChild(tile('Пульс покоя', fmt(latest?.lowest_hr_bpm), 'уд/мин', { value: data.resting_hr.latest_vs_mean_bpm, label: 'к среднему', digits: 1 }, col('lowest_hr_bpm'), { upIsGood: false }));
-    k.appendChild(tile('Сон', fmt(latest?.total_sleep_h, 1), 'ч', { value: dl(latest?.total_sleep_h, avg.total_sleep_h), label: 'к среднему', digits: 1 }, col('total_sleep_h')));
-    k.appendChild(tile('Нагрузка', fmt(data.training_load.load_points), 'очк.', { label: `${data.training_load.workouts} трен., ${fmt(data.training_load.total_minutes)} мин · ${fmt(data.training_load.avg_daily_load_points, 1)}/день` }, col('workout_min')));
-
-    legend($('#lg-scores'), [{ name: 'Готовность', color: '--s1' }, { name: 'Сон', color: '--s2' }]);
-    lineChart($('#c-scores'), days, [{ name: 'Готовность', color: '--s1', values: col('readiness_score') }, { name: 'Сон', color: '--s2', values: col('sleep_score') }], { domain: [0, 100] });
-    lineChart($('#c-hrv'), days, [{ name: 'HRV', color: '--s1', values: col('avg_hrv_ms'), unit: 'мс' }], { baseline: data.hrv.mean_ms, area: true });
-    lineChart($('#c-rhr'), days, [{ name: 'Пульс покоя', color: '--s1', values: col('lowest_hr_bpm'), unit: 'уд/мин' }], { baseline: data.resting_hr.mean_bpm, area: true });
-    const h = (k2) => rows.map((r) => (r[k2] === null ? 0 : r[k2] / 60));
-    legend($('#lg-sleep'), [{ name: 'Глубокий', color: '--s1' }, { name: 'REM', color: '--s2' }, { name: 'Лёгкий', color: '--s3' }], 'rect');
-    columnChart($('#c-sleep'), days, [
-      { name: 'Глубокий', color: '--s1', values: h('deep_min'), unit: 'ч', digits: 1 },
-      { name: 'REM', color: '--s2', values: h('rem_min'), unit: 'ч', digits: 1 },
-      { name: 'Лёгкий', color: '--s3', values: h('light_min'), unit: 'ч', digits: 1 },
-    ], { extra: (i) => [{ color: css('--deemph'), value: fmt(rows[i].sleep_efficiency) + ' %', name: 'эффективность' }] });
-    columnChart($('#c-load'), days, [{ name: 'Тренировки', color: '--s1', values: col('workout_min'), unit: 'мин' }], {
-      extra: (i) => [{ color: css('--deemph'), value: String(rows[i].workouts), name: rows[i].workout_types.join(', ') || 'тренировок' }, { color: css('--deemph'), value: fmt(rows[i].active_calories), name: 'активных ккал' }],
-    });
-    legend($('#lg-stress'), [{ name: 'Стресс', color: '--s2' }, { name: 'Восстановление', color: '--s3' }], 'rect');
-    columnChart($('#c-stress'), days, [
-      { name: 'Стресс', color: '--s2', values: rows.map((r) => r.stress_high_min || 0), unit: 'мин' },
-      { name: 'Восстановление', color: '--s3', values: rows.map((r) => r.recovery_high_min || 0), unit: 'мин' },
-    ]);
-
-    // table
-    const cols = [
-      ['Дата', (r) => dstr(r.day)], ['Готовн.', (r) => fmt(r.readiness_score)], ['Сон', (r) => fmt(r.sleep_score)], ['Актив.', (r) => fmt(r.activity_score)],
-      ['Сон, ч', (r) => fmt(r.total_sleep_h, 2)], ['Глуб.', (r) => fmt(r.deep_min)], ['REM', (r) => fmt(r.rem_min)], ['Лёгк.', (r) => fmt(r.light_min)], ['Эфф. %', (r) => fmt(r.sleep_efficiency)],
-      ['HRV', (r) => fmt(r.avg_hrv_ms)], ['Пульс мин', (r) => fmt(r.lowest_hr_bpm)], ['Пульс ср', (r) => fmt(r.avg_hr_bpm)], ['Темп. Δ', (r) => fmt(r.temperature_deviation, 2)],
-      ['Шаги', (r) => fmt(r.steps)], ['Акт. ккал', (r) => fmt(r.active_calories)], ['Трен.', (r) => r.workouts], ['Трен. мин', (r) => fmt(r.workout_min)], ['Типы', (r) => r.workout_types.join(', ')],
-      ['Стресс', (r) => fmt(r.stress_high_min)], ['Восст.', (r) => fmt(r.recovery_high_min)], ['SpO2', (r) => fmt(r.spo2_avg, 1)], ['Резил.', (r) => r.resilience_level || '–'],
-    ];
+    k.appendChild(card('Готовность', fmt(latest?.readiness_score), '', '', delta(dl(latest?.readiness_score, avg.readiness_score)), col('readiness_score')));
+    k.appendChild(card('Сон, балл', fmt(latest?.sleep_score), '', '', delta(dl(latest?.sleep_score, avg.sleep_score)), col('sleep_score')));
+    k.appendChild(card('HRV', fmt(latest?.avg_hrv_ms), 'мс', '', delta(data.hrv.latest_vs_mean_pct, '%', 1), col('avg_hrv_ms')));
+    k.appendChild(card('Пульс покоя', fmt(latest?.lowest_hr_bpm), 'уд/мин', '', delta(data.resting_hr.latest_vs_mean_bpm, '', 1, false), col('lowest_hr_bpm')));
+    legend($('#lg-scores'), [{ name: 'Готовность', color: '--blue' }, { name: 'Сон', color: '--orange' }]);
+    lineChart($('#c-scores'), days, [{ name: 'Готовность', color: '--blue', values: col('readiness_score') }, { name: 'Сон', color: '--orange', values: col('sleep_score') }], { domain: [0, 100] });
+    lineChart($('#c-hrv'), days, [{ name: 'HRV', color: '--blue', values: col('avg_hrv_ms'), unit: 'мс' }], { baseline: data.hrv.mean_ms, area: true });
+    lineChart($('#c-rhr'), days, [{ name: 'Пульс покоя', color: '--blue', values: col('lowest_hr_bpm'), unit: 'уд/мин' }], { baseline: data.resting_hr.mean_bpm, area: true });
+    const h = (key) => rows.map((r) => (r[key] === null ? 0 : r[key] / 60));
+    legend($('#lg-sleep'), [{ name: 'Глубокий', color: '--blue' }, { name: 'REM', color: '--orange' }, { name: 'Лёгкий', color: '--aqua' }], 'rect');
+    columnChart($('#c-sleep'), days, [{ name: 'Глубокий', color: '--blue', values: h('deep_min'), unit: 'ч', digits: 1 }, { name: 'REM', color: '--orange', values: h('rem_min'), unit: 'ч', digits: 1 }, { name: 'Лёгкий', color: '--aqua', values: h('light_min'), unit: 'ч', digits: 1 }], { extra: (i) => [{ color: css('--deemph'), value: fmt(rows[i].sleep_efficiency) + ' %', name: 'эффективность' }] });
+    columnChart($('#c-load'), days, [{ name: 'Тренировки', color: '--blue', values: col('workout_min'), unit: 'мин' }], { extra: (i) => [{ color: css('--deemph'), value: String(rows[i].workouts), name: rows[i].workout_types.join(', ') || 'тренировок' }] });
+    legend($('#lg-stress'), [{ name: 'Стресс', color: '--orange' }, { name: 'Восстановление', color: '--aqua' }], 'rect');
+    columnChart($('#c-stress'), days, [{ name: 'Стресс', color: '--orange', values: rows.map((r) => r.stress_high_min || 0), unit: 'мин' }, { name: 'Восстановление', color: '--aqua', values: rows.map((r) => r.recovery_high_min || 0), unit: 'мин' }]);
+    const cols = [['Дата', (r) => dstr(r.day)], ['Готовн.', (r) => fmt(r.readiness_score)], ['Сон', (r) => fmt(r.sleep_score)], ['Актив.', (r) => fmt(r.activity_score)], ['Сон, ч', (r) => fmt(r.total_sleep_h, 2)], ['Глуб.', (r) => fmt(r.deep_min)], ['REM', (r) => fmt(r.rem_min)], ['Лёгк.', (r) => fmt(r.light_min)], ['Эфф. %', (r) => fmt(r.sleep_efficiency)], ['HRV', (r) => fmt(r.avg_hrv_ms)], ['Пульс мин', (r) => fmt(r.lowest_hr_bpm)], ['Пульс ср', (r) => fmt(r.avg_hr_bpm)], ['Темп. Δ', (r) => fmt(r.temperature_deviation, 2)], ['Шаги', (r) => fmt(r.steps)], ['Акт. ккал', (r) => fmt(r.active_calories)], ['Трен.', (r) => r.workouts], ['Трен. мин', (r) => fmt(r.workout_min)], ['Стресс', (r) => fmt(r.stress_high_min)], ['Восст.', (r) => fmt(r.recovery_high_min)], ['SpO2', (r) => fmt(r.spo2_avg, 1)]];
     const table = $('#table'); table.replaceChildren();
-    const thead = document.createElement('thead'); const trh = document.createElement('tr');
-    for (const [n] of cols) { const th = document.createElement('th'); th.textContent = n; trh.appendChild(th); }
+    const thead = document.createElement('thead'), trh = document.createElement('tr');
+    for (const [n] of cols) trh.appendChild(text('th', '', n));
     thead.appendChild(trh); table.appendChild(thead);
     const tb = document.createElement('tbody');
-    for (const r of [...rows].reverse()) { const tr = document.createElement('tr'); for (const [, f] of cols) { const td = document.createElement('td'); td.textContent = String(f(r)); tr.appendChild(td); } tb.appendChild(tr); }
+    for (const r of [...rows].reverse()) { const tr = document.createElement('tr'); for (const [, f] of cols) tr.appendChild(text('td', '', String(f(r)))); tb.appendChild(tr); }
     table.appendChild(tb);
-
-    const errs = Object.entries(data.errors || {});
-    $('#warn').textContent = errs.length ? 'Недоступно: ' + errs.map(([k2, v]) => `${k2} (${v.replace(/^Oura API /, '').slice(0, 80)})`).join('; ') : '';
-    $('#foot').textContent = `${data.range.start_date} — ${data.range.end_date}, дней с данными: ${data.range.days_with_data}. Обновлено ${new Date(data.generated_at).toLocaleString('ru-RU')}. Это данные кольца, а не медицинская диагностика.`;
+    $('#foot').textContent = `${data.range.start_date} — ${data.range.end_date}, дней с данными: ${data.range.days_with_data}. Обновлено ${new Date(data.generated_at).toLocaleString('ru-RU')}.`;
     applyView();
   }
 
-  let rt; addEventListener('resize', () => { clearTimeout(rt); rt = setTimeout(() => state.data && render(state.data), 150); });
-  matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => state.data && render(state.data));
-  status().then((s) => { if (s && !s.connected) { $('#content').classList.add('hidden'); showEmpty(); } else load(); });
+  // ---------- Старт ----------
+  let rt; addEventListener('resize', () => { clearTimeout(rt); rt = setTimeout(() => { if (state.screen === 'trends' && state.trends) renderTrends(state.trends); else if (state.day) renderDay(state.day); }, 150); });
+  (async () => {
+    try {
+      const s = await api('/api/status'); state.status = s;
+      $('#status').textContent = s.connected ? 'Oura подключена' : 'Oura не подключена';
+      if (!s.connected) { showEmpty(); $('#dayrow').classList.add('hidden'); return; }
+      // "сегодня" в часовом поясе сервера: берём из /api/day
+      const first = await api('/api/day');
+      state.today = first.today; state.date = first.date; state.day = first;
+      updateDayLabel(); renderDay(first);
+    } catch (e) { /* уже показано */ }
+  })();
 })();
 </script>
 </body>
