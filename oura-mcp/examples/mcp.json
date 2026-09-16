@@ -1,0 +1,13 @@
+{
+  "mcpServers": {
+    "oura": {
+      "type": "stdio",
+      "command": "node",
+      "args": ["oura-mcp/dist/index.js"],
+      "env": {
+        "OURA_ACCESS_TOKEN": "${OURA_ACCESS_TOKEN}",
+        "OURA_TIMEZONE": "Europe/Moscow"
+      }
+    }
+  }
+}
