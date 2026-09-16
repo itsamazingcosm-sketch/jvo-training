@@ -1,5 +1,6 @@
-# Используется контейнером caddy из docker-compose.yml. DOMAIN задаётся в .env
-{$DOMAIN} {
+# Используется контейнером caddy из docker-compose.yml.
+# SITE_ADDRESS из .env: домен (HTTPS автоматически) или http://IP (без TLS).
+{$SITE_ADDRESS} {
     encode gzip
     reverse_proxy oura:8484
 }

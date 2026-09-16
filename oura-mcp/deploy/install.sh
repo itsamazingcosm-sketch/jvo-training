@@ -86,34 +86,70 @@ fi
 cd "$APP_DIR"
 
 # ---------- настройки ----------
-# Неинтерактивно: DOMAIN=... OURA_CLIENT_ID=... OURA_CLIENT_SECRET=... DASHBOARD_PASSWORD=... bash install.sh
+# Значения можно передать переменными окружения: DOMAIN, OURA_CLIENT_ID, OURA_CLIENT_SECRET,
+# DASHBOARD_PASSWORD, OURA_TIMEZONE. С NONINTERACTIVE=1 скрипт ничего не спрашивает: без DOMAIN
+# берёт публичный IP сервера (тогда сайт работает по http://IP без сертификата), без пароля
+# генерирует случайный и печатает его. Переданные значения обновляют существующий .env.
+setenv() { # setenv KEY VALUE  (upsert в .env)
+  local key="$1" val="$2"
+  if grep -q "^$key=" .env 2>/dev/null; then
+    python3 - "$key" "$val" <<'PYEOF' 2>/dev/null || { grep -v "^$key=" .env > .env.tmp; echo "$key=$val" >> .env.tmp; mv .env.tmp .env; }
+import sys,re
+k,v=sys.argv[1],sys.argv[2]
+lines=open('.env').read().splitlines()
+out=[f"{k}={v}" if l.startswith(k+"=") else l for l in lines]
+open('.env','w').write("\n".join(out)+"\n")
+PYEOF
+  else
+    echo "$key=$val" >> .env
+  fi
+}
+GENERATED_PASSWORD=""
 if [ ! -f .env ]; then
   say "Настройки (сохранятся в $APP_DIR/.env)"
-  echo "Client ID и Client Secret: https://cloud.ouraring.com/oauth/applications"
-  [ -n "${DOMAIN:-}" ] || ask DOMAIN "Домен дашборда (A-запись уже указывает на этот сервер), напр. oura.example.com"
-  [ -n "${OURA_CLIENT_ID:-}" ] || ask OURA_CLIENT_ID "OURA_CLIENT_ID"
-  [ -n "${OURA_CLIENT_SECRET:-}" ] || ask OURA_CLIENT_SECRET "OURA_CLIENT_SECRET" "" secret
-  [ -n "${DASHBOARD_PASSWORD:-}" ] || ask DASHBOARD_PASSWORD "Пароль для входа на дашборд" "" secret
-  [ -n "${OURA_TIMEZONE:-}" ] || ask OURA_TIMEZONE "Часовой пояс" "Europe/Moscow"
-  SESSION_SECRET="$(head -c 32 /dev/urandom | od -An -tx1 | tr -d ' \n')"
+  if [ "${NONINTERACTIVE:-}" != 1 ]; then
+    echo "Client ID и Client Secret: https://cloud.ouraring.com/oauth/applications"
+    [ -n "${DOMAIN:-}" ] || ask DOMAIN "Домен дашборда (A-запись уже указывает на этот сервер), напр. oura.example.com"
+    [ -n "${OURA_CLIENT_ID:-}" ] || ask OURA_CLIENT_ID "OURA_CLIENT_ID"
+    [ -n "${OURA_CLIENT_SECRET:-}" ] || ask OURA_CLIENT_SECRET "OURA_CLIENT_SECRET" "" secret
+    [ -n "${DASHBOARD_PASSWORD:-}" ] || ask DASHBOARD_PASSWORD "Пароль для входа на дашборд" "" secret
+    [ -n "${OURA_TIMEZONE:-}" ] || ask OURA_TIMEZONE "Часовой пояс" "Europe/Moscow"
+  fi
+  if [ -z "${DASHBOARD_PASSWORD:-}" ]; then
+    DASHBOARD_PASSWORD="$(head -c 12 /dev/urandom | base64 | tr -dc 'A-Za-z0-9' | head -c 14)"
+    GENERATED_PASSWORD="$DASHBOARD_PASSWORD"
+  fi
   umask 077
   cat > .env <<ENV
-DOMAIN=$DOMAIN
-PUBLIC_URL=https://$DOMAIN
-OURA_CLIENT_ID=$OURA_CLIENT_ID
-OURA_CLIENT_SECRET=$OURA_CLIENT_SECRET
-DASHBOARD_PASSWORD=$DASHBOARD_PASSWORD
-SESSION_SECRET=$SESSION_SECRET
-OURA_TIMEZONE=$OURA_TIMEZONE
+SESSION_SECRET=$(head -c 32 /dev/urandom | od -An -tx1 | tr -d ' \n')
 OURA_SCOPES=personal daily heartrate workout session tag spo2
+OURA_TIMEZONE=${OURA_TIMEZONE:-Europe/Moscow}
+DASHBOARD_PASSWORD=$DASHBOARD_PASSWORD
 ENV
   umask 022
 else
-  echo ".env уже есть, оставляю как есть"
-  grep -q '^DOMAIN=' .env || { d="$(sed -n 's#^PUBLIC_URL=https\?://##p' .env | head -1)"; echo "DOMAIN=$d" >> .env; }
+  echo ".env уже есть, обновляю только переданные значения"
+fi
+[ -z "${OURA_CLIENT_ID:-}" ]     || setenv OURA_CLIENT_ID "$OURA_CLIENT_ID"
+[ -z "${OURA_CLIENT_SECRET:-}" ] || setenv OURA_CLIENT_SECRET "$OURA_CLIENT_SECRET"
+[ -z "${DASHBOARD_PASSWORD:-}" ] || setenv DASHBOARD_PASSWORD "$DASHBOARD_PASSWORD"
+[ -z "${OURA_TIMEZONE:-}" ]      || setenv OURA_TIMEZONE "$OURA_TIMEZONE"
+if [ -n "${DOMAIN:-}" ]; then
+  setenv DOMAIN "$DOMAIN"
+elif ! grep -q '^DOMAIN=' .env; then
+  DOMAIN="$(sed -n 's#^PUBLIC_URL=https\?://##p' .env | head -1)"
+  [ -n "$DOMAIN" ] || DOMAIN="$(curl -4 -fsS --max-time 5 https://ifconfig.me 2>/dev/null || hostname -I | awk '{print $1}')"
+  setenv DOMAIN "$DOMAIN"
 fi
 DOMAIN="$(sed -n 's#^DOMAIN=##p' .env | head -1)"
-[ -n "$DOMAIN" ] || { echo "В .env нет DOMAIN"; exit 1; }
+[ -n "$DOMAIN" ] || { echo "Не удалось определить DOMAIN"; exit 1; }
+if printf '%s' "$DOMAIN" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$'; then
+  SITE_ADDRESS="http://$DOMAIN"; PUBLIC_URL="http://$DOMAIN"; TLS_NOTE="без HTTPS (адрес по IP)"
+else
+  SITE_ADDRESS="$DOMAIN"; PUBLIC_URL="https://$DOMAIN"; TLS_NOTE="HTTPS"
+fi
+setenv SITE_ADDRESS "$SITE_ADDRESS"
+setenv PUBLIC_URL "$PUBLIC_URL"
 
 # ---------- firewall ----------
 if command -v ufw >/dev/null && $SUDO ufw status 2>/dev/null | grep -q "Status: active"; then
@@ -130,15 +166,16 @@ for _ in 1 2 3 4 5 6 7 8 9 10; do
   sleep 2
 done
 if [ "${ok:-}" = 1 ]; then
-  say "Готово: https://$DOMAIN"
+  say "Готово: $PUBLIC_URL ($TLS_NOTE)"
+  [ -z "$GENERATED_PASSWORD" ] || echo "Пароль для входа на дашборд (сгенерирован): $GENERATED_PASSWORD"
   cat <<MSG
 
 Дальше:
   1. В приложении Oura (https://cloud.ouraring.com/oauth/applications) в Redirect URIs
-     должно быть ровно:  https://$DOMAIN/callback
-  2. Откройте https://$DOMAIN, введите пароль, нажмите «Подключить Oura», разрешите доступ.
-  3. Сертификат выпускается 10-30 секунд после первого открытия сайта; нужны открытые порты 80 и 443
-     и A-запись $DOMAIN -> IP этого сервера.
+     должно быть ровно:  $PUBLIC_URL/callback
+  2. Откройте $PUBLIC_URL, введите пароль, нажмите «Подключить Oura», разрешите доступ.
+  3. С доменом сертификат выпускается 10-30 секунд после первого открытия сайта; нужны открытые
+     порты 80 и 443 и A-запись домена -> IP этого сервера.
 
 Команды:
   логи:        cd $APP_DIR && docker compose logs -f
