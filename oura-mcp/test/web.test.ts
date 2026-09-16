@@ -90,8 +90,10 @@ test("/api/status and /api/dashboard with a static token", async () => {
     assert.equal(res.status, 200);
     const body = await json(res);
     assert.deepEqual(body.range, { start_date: "2026-09-14", end_date: "2026-09-16", days_with_data: 1 });
-    assert.equal(body.rows[0].readiness_score, 80);
-    assert.equal(body.rows[0].total_sleep_h, 7);
+    assert.equal(body.rows.length, 3);
+    assert.equal(body.rows[1].day, "2026-09-15");
+    assert.equal(body.rows[1].readiness_score, 80);
+    assert.equal(body.rows[1].total_sleep_h, 7);
     assert.match(body.errors.daily_spo2, /403/);
     assert.ok(calls.every((c) => (c.init?.headers as Record<string, string>).Authorization === "Bearer tok"));
     assert.equal((await get("/api/nope")).status, 404);

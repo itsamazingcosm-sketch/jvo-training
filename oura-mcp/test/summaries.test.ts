@@ -56,7 +56,11 @@ test("pickMainSleep prefers long_sleep, else the longest period", () => {
 
 test("buildDashboard merges collections per day and computes aggregates", () => {
   const s = buildDashboard(input);
-  assert.equal(s.rows.length, 2);
+  assert.equal(s.rows.length, 3);
+  assert.equal(s.rows[2].day, "2026-09-03");
+  assert.equal(s.rows[2].readiness_score, null);
+  assert.equal(s.rows[2].workouts, 0);
+  assert.equal(s.latest?.day, "2026-09-02");
   const d1 = s.rows[0];
   assert.equal(d1.day, "2026-09-01");
   assert.equal(d1.readiness_score, 70);
@@ -93,7 +97,8 @@ test("buildDashboard merges collections per day and computes aggregates", () => 
 
 test("buildDashboard ignores records outside the window", () => {
   const s = buildDashboard({ ...input, readiness: [...input.readiness, { day: "2026-08-01", score: 1 }] });
-  assert.equal(s.rows.length, 2);
+  assert.equal(s.rows.length, 3);
+  assert.equal(s.range.days_with_data, 2);
 });
 
 test("dashboardMarkdown renders a table with one row per day", () => {

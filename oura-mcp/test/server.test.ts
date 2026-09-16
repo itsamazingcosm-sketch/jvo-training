@@ -122,8 +122,8 @@ test("oura_dashboard tolerates a failing collection and renders markdown", async
   });
   const { client, server } = await connect(fn);
   const json = JSON.parse(text(await client.callTool({ name: "oura_dashboard", arguments: { start_date: "2026-09-01", end_date: "2026-09-02" } })));
-  assert.equal(json.rows.length, 1);
-  assert.equal(json.rows[0].total_sleep_h, 7);
+  assert.equal(json.rows.length, 2);
+  assert.equal(json.rows[1].total_sleep_h, 7);
   assert.match(json.errors.daily_spo2, /HTTP 403/);
   const md = text(await client.callTool({ name: "oura_dashboard", arguments: { start_date: "2026-09-01", end_date: "2026-09-02", format: "markdown" } }));
   assert.match(md, /\| 2026-09-02 \| 80 \| 70 \| 60 \| 7 \|/);

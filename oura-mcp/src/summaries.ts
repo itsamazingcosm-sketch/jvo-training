@@ -101,6 +101,12 @@ export function pickMainSleep(periods: Json[]): Json | undefined {
   return pool.sort((a, b) => (num(b.total_sleep_duration) ?? 0) - (num(a.total_sleep_duration) ?? 0))[0];
 }
 
+function nextDay(iso: string): string {
+  const d = new Date(`${iso}T00:00:00Z`);
+  d.setUTCDate(d.getUTCDate() + 1);
+  return d.toISOString().slice(0, 10);
+}
+
 const INTENSITY_WEIGHT: Record<string, number> = { easy: 1, moderate: 2, hard: 3 };
 
 function workoutMinutes(w: Json): number {
@@ -120,18 +126,12 @@ export function buildDashboard(input: DashboardInput): DashboardSummary {
   const sleepPeriods = groupByDay(input.sleepPeriods);
   const workouts = groupByDay(input.workouts);
 
-  const days = new Set<string>([
-    ...readiness.keys(),
-    ...dailySleep.keys(),
-    ...activity.keys(),
-    ...sleepPeriods.keys(),
-    ...workouts.keys(),
-    ...stress.keys(),
-  ]);
-  const rows: DayRow[] = [...days]
-    .filter((d) => d >= input.range.start_date && d <= input.range.end_date)
-    .sort()
-    .map((day) => {
+  // One row per calendar day in the window, so missing days show up as gaps instead of vanishing.
+  const days: string[] = [];
+  for (let d = input.range.start_date; d <= input.range.end_date; d = nextDay(d)) days.push(d);
+  const hasData = (day: string) =>
+    readiness.has(day) || dailySleep.has(day) || activity.has(day) || sleepPeriods.has(day) || workouts.has(day) || stress.has(day);
+  const rows: DayRow[] = days.map((day) => {
       const r = readiness.get(day);
       const ds = dailySleep.get(day);
       const sp = pickMainSleep(sleepPeriods.get(day) ?? []);
@@ -200,7 +200,7 @@ export function buildDashboard(input: DashboardInput): DashboardSummary {
     spo2_avg: mean("spo2_avg"),
   };
 
-  const latest = rows.length ? rows[rows.length - 1] : null;
+  const latest = [...rows].reverse().find((r) => hasData(r.day)) ?? null;
   const hrvMean = averages.avg_hrv_ms;
   const hrvLatest = latest?.avg_hrv_ms ?? null;
   const rhrMean = averages.lowest_hr_bpm;
@@ -225,7 +225,7 @@ export function buildDashboard(input: DashboardInput): DashboardSummary {
     Math.round((Date.parse(input.range.end_date) - Date.parse(input.range.start_date)) / 86_400_000) + 1;
 
   return {
-    range: { ...input.range, days_with_data: rows.length },
+    range: { ...input.range, days_with_data: days.filter(hasData).length },
     averages,
     latest,
     hrv: {
