@@ -157,6 +157,22 @@ if command -v ufw >/dev/null && $SUDO ufw status 2>/dev/null | grep -q "Status: 
   $SUDO ufw allow 80/tcp >/dev/null; $SUDO ufw allow 443/tcp >/dev/null; $SUDO ufw allow 443/udp >/dev/null
 fi
 
+# ---------- порты 80/443 ----------
+# Caddy в контейнере занимает 80 и 443. Если на хосте уже крутится nginx/apache (часто в образах
+# хостингов), останавливаем и отключаем его, иначе контейнер не поднимется.
+for svc in nginx apache2 httpd caddy; do
+  if systemctl is-active --quiet "$svc" 2>/dev/null; then
+    say "На хосте активен $svc и занимает порты 80/443: останавливаю и отключаю его"
+    $SUDO systemctl disable --now "$svc" >/dev/null 2>&1 || true
+  fi
+done
+busy="$(ss -ltnp 2>/dev/null | awk '$4 ~ /:(80|443)$/ && $0 !~ /docker/ {print $4, $NF}')"
+if [ -n "$busy" ]; then
+  echo "Порты 80/443 заняты не Docker-процессом, освободите их и запустите скрипт снова:"
+  echo "$busy"
+  exit 1
+fi
+
 # ---------- запуск ----------
 say "Сборка и запуск (oura + caddy)"
 $SUDO docker compose up -d --build
