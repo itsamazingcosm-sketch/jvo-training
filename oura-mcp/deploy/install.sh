@@ -2,6 +2,8 @@
 # Установка Oura-дашборда на VPS (Ubuntu / Debian, в т.ч. Beget) одной командой.
 # Запуск на сервере под root (или пользователем с sudo):
 #   curl -fsSL https://raw.githubusercontent.com/itsamazingcosm-sketch/jvo-training/claude/oura-mcp-server-p9ukul/oura-mcp/deploy/install.sh | bash
+# Без вопросов (всё одной строкой):
+#   curl -fsSL <та же ссылка> | DOMAIN=oura.example.com OURA_CLIENT_ID=... OURA_CLIENT_SECRET=... DASHBOARD_PASSWORD=... bash
 # Скрипт идемпотентный: повторный запуск обновит код и перезапустит контейнеры, .env не тронет.
 set -euo pipefail
 
@@ -84,14 +86,15 @@ fi
 cd "$APP_DIR"
 
 # ---------- настройки ----------
+# Неинтерактивно: DOMAIN=... OURA_CLIENT_ID=... OURA_CLIENT_SECRET=... DASHBOARD_PASSWORD=... bash install.sh
 if [ ! -f .env ]; then
   say "Настройки (сохранятся в $APP_DIR/.env)"
   echo "Client ID и Client Secret: https://cloud.ouraring.com/oauth/applications"
-  ask DOMAIN "Домен дашборда (A-запись уже указывает на этот сервер), напр. oura.example.com"
-  ask OURA_CLIENT_ID "OURA_CLIENT_ID"
-  ask OURA_CLIENT_SECRET "OURA_CLIENT_SECRET" "" secret
-  ask DASHBOARD_PASSWORD "Пароль для входа на дашборд" "" secret
-  ask OURA_TIMEZONE "Часовой пояс" "Europe/Moscow"
+  [ -n "${DOMAIN:-}" ] || ask DOMAIN "Домен дашборда (A-запись уже указывает на этот сервер), напр. oura.example.com"
+  [ -n "${OURA_CLIENT_ID:-}" ] || ask OURA_CLIENT_ID "OURA_CLIENT_ID"
+  [ -n "${OURA_CLIENT_SECRET:-}" ] || ask OURA_CLIENT_SECRET "OURA_CLIENT_SECRET" "" secret
+  [ -n "${DASHBOARD_PASSWORD:-}" ] || ask DASHBOARD_PASSWORD "Пароль для входа на дашборд" "" secret
+  [ -n "${OURA_TIMEZONE:-}" ] || ask OURA_TIMEZONE "Часовой пояс" "Europe/Moscow"
   SESSION_SECRET="$(head -c 32 /dev/urandom | od -An -tx1 | tr -d ' \n')"
   umask 077
   cat > .env <<ENV

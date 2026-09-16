@@ -159,7 +159,15 @@ DASHBOARD_PASSWORD=секрет OURA_CLIENT_ID=... OURA_CLIENT_SECRET=... npm ru
    curl -fsSL https://raw.githubusercontent.com/itsamazingcosm-sketch/jvo-training/claude/oura-mcp-server-p9ukul/oura-mcp/deploy/install.sh | bash
    ```
 
-   Скрипт спросит домен, Client ID / Secret, пароль для входа и часовой пояс, затем:
+   Скрипт спросит домен, Client ID / Secret, пароль для входа и часовой пояс. Можно передать их сразу и
+   ничего не вводить:
+
+   ```bash
+   curl -fsSL https://raw.githubusercontent.com/itsamazingcosm-sketch/jvo-training/claude/oura-mcp-server-p9ukul/oura-mcp/deploy/install.sh \
+     | DOMAIN=oura.вашдомен.ru OURA_CLIENT_ID=... OURA_CLIENT_SECRET=... DASHBOARD_PASSWORD=... bash
+   ```
+
+   Затем скрипт:
    поставит Docker из репозитория Ubuntu (сайт Docker из России недоступен), подключит зеркала Docker Hub
    (`dockerhub1.beget.com`, `dockerhub.timeweb.cloud`, `mirror.gcr.io`), скачает код в `/opt/oura`,
    соберёт образ и поднимет два контейнера: дашборд и Caddy с автоматическим HTTPS-сертификатом.
