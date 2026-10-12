@@ -1,0 +1,12 @@
+services:
+  newsbot:
+    build: .
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      DB_PATH: /data/newsbot.sqlite3
+    volumes:
+      - newsbot-data:/data
+
+volumes:
+  newsbot-data:

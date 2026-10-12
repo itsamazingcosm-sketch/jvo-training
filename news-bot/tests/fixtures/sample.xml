@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0">
+<channel>
+<title>Тестовая лента</title>
+<item>
+  <title>Wildberries ужесточил штрафы для продавцов за задержку поставок на склады</title>
+  <link>https://example.com/news/wb-fines</link>
+  <description><![CDATA[<p>Маркетплейс объявил, что с 1 ноября штраф за просрочку поставки вырастет вдвое. Селлеры жалуются на нехватку слотов.</p>]]></description>
+  <pubDate>PUBDATE</pubDate>
+</item>
+<item>
+  <title>Ozon запустил ИИ-помощника для генерации карточек товаров</title>
+  <link>https://example.com/news/ozon-ai-cards</link>
+  <description>Инструмент бесплатно доступен всем продавцам и создаёт описание по фото за несколько секунд.</description>
+  <pubDate>PUBDATE</pubDate>
+</item>
+<item>
+  <title>В Подмосковье прошёл фестиваль воздушных шаров</title>
+  <link>https://example.com/news/balloons</link>
+  <description>Тысячи зрителей собрались посмотреть на шоу.</description>
+  <pubDate>PUBDATE</pubDate>
+</item>
+<item>
+  <title>Старая новость про маркетплейсы</title>
+  <link>https://example.com/news/old</link>
+  <description>Маркетплейсы росли в прошлом году.</description>
+  <pubDate>Mon, 01 Jan 2024 10:00:00 +0300</pubDate>
+</item>
+</channel>
+</rss>
