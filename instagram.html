@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Дживио · Instagram аналитика</title>
+  <meta name="description" content="Дашборд статистики Instagram-аккаунта и видео: охват, просмотры, подписчики, вовлечённость, Reels.">
+  <link rel="stylesheet" href="instagram.css">
+</head>
+<body>
+
+  <header class="ig-top">
+    <a class="ig-top__brand" href="index.html" title="К обучению">
+      <img src="logo-light.svg" alt="Дживио">
+      <span class="ig-top__sep"></span>
+      <span class="ig-top__title">Instagram · аналитика</span>
+    </a>
+    <div class="ig-top__status" id="topStatus"></div>
+  </header>
+
+  <main class="ig-wrap">
+
+    <!-- Подключение -->
+    <section class="ig-connect" id="connect">
+      <div class="ig-connect__text">
+        <h1>Статистика аккаунта и видео</h1>
+        <p>Подключите профессиональный аккаунт Instagram (Business или Creator) через токен доступа Meta Graph API. Токен хранится только в этом браузере и отправляется напрямую в Meta.</p>
+      </div>
+      <form class="ig-connect__form" id="connectForm" autocomplete="off">
+        <label class="ig-field">
+          <span>Токен доступа</span>
+          <input type="password" id="tokenInput" placeholder="EAAB… или IGQV…" spellcheck="false">
+        </label>
+        <div class="ig-connect__actions">
+          <button type="submit" class="btn btn--pink" id="connectBtn">Подключить</button>
+          <button type="button" class="btn btn--ghost" id="demoBtn">Показать на демо‑данных</button>
+          <button type="button" class="btn btn--link" id="logoutBtn" hidden>Отключить аккаунт</button>
+        </div>
+        <p class="ig-connect__hint" id="connectHint">
+          Где взять токен: <a href="https://developers.facebook.com/tools/explorer/" target="_blank" rel="noopener">Graph API Explorer</a> → выбрать приложение → разрешения <code>instagram_basic</code>, <code>instagram_manage_insights</code>, <code>pages_show_list</code> (для входа через Facebook) или <code>instagram_business_basic</code>, <code>instagram_business_manage_insights</code> (для входа через Instagram).
+        </p>
+        <p class="ig-connect__error" id="connectError" hidden></p>
+      </form>
+    </section>
+
+    <!-- Дашборд -->
+    <div id="dash" hidden>
+
+      <!-- Фильтры: одна строка над всем -->
+      <div class="ig-filters" id="filters">
+        <div class="ig-seg" role="group" aria-label="Период">
+          <button data-days="7">7 дней</button>
+          <button data-days="14">14 дней</button>
+          <button data-days="30" class="is-on">30 дней</button>
+        </div>
+        <div class="ig-seg" role="group" aria-label="Тип видео">
+          <button data-kind="all" class="is-on">Все видео</button>
+          <button data-kind="REELS">Reels</button>
+          <button data-kind="FEED">Видео в ленте</button>
+        </div>
+        <label class="ig-select">
+          <span>Сортировка</span>
+          <select id="sortSel">
+            <option value="views">по просмотрам</option>
+            <option value="reach">по охвату</option>
+            <option value="total_interactions">по взаимодействиям</option>
+            <option value="er">по вовлечённости</option>
+            <option value="date">по дате</option>
+          </select>
+        </label>
+        <button class="btn btn--ghost btn--sm" id="refreshBtn">Обновить</button>
+        <span class="ig-filters__note" id="freshNote"></span>
+      </div>
+
+      <!-- Профиль -->
+      <section class="ig-profile" id="profile"></section>
+
+      <!-- KPI аккаунта -->
+      <section>
+        <div class="ig-sec-head"><h2>Аккаунт за период</h2><span id="periodLabel"></span></div>
+        <div class="ig-kpis" id="kpis"></div>
+      </section>
+
+      <!-- Графики аккаунта -->
+      <section class="ig-grid-2">
+        <div class="ig-card">
+          <div class="ig-card__head"><h3>Новые подписчики по дням</h3><span class="ig-card__sub" id="subFollowers"></span></div>
+          <div class="ig-chart" id="chFollowers"></div>
+        </div>
+        <div class="ig-card">
+          <div class="ig-card__head"><h3>Охват по дням</h3><span class="ig-card__sub">уникальные аккаунты</span></div>
+          <div class="ig-chart" id="chReach"></div>
+        </div>
+        <div class="ig-card">
+          <div class="ig-card__head"><h3>Взаимодействия</h3><span class="ig-card__sub">за период</span></div>
+          <div class="ig-chart" id="chInteractions"></div>
+        </div>
+        <div class="ig-card">
+          <div class="ig-card__head"><h3>Когда аудитория онлайн</h3><span class="ig-card__sub">среднее по часам, UTC</span></div>
+          <div class="ig-chart" id="chOnline"></div>
+        </div>
+      </section>
+
+      <!-- Аудитория -->
+      <section>
+        <div class="ig-sec-head"><h2>Аудитория</h2><span>демография подписчиков</span></div>
+        <div class="ig-grid-3">
+          <div class="ig-card">
+            <div class="ig-card__head"><h3>Возраст</h3></div>
+            <div class="ig-chart" id="chAge"></div>
+          </div>
+          <div class="ig-card">
+            <div class="ig-card__head"><h3>Пол</h3></div>
+            <div class="ig-chart" id="chGender"></div>
+          </div>
+          <div class="ig-card">
+            <div class="ig-card__head"><h3>Города</h3></div>
+            <div class="ig-chart" id="chCity"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Видео -->
+      <section>
+        <div class="ig-sec-head"><h2>Видео и Reels</h2><span id="videoCount"></span></div>
+        <div class="ig-kpis" id="videoKpis"></div>
+        <div class="ig-grid-2 ig-grid-2--wide">
+          <div class="ig-card">
+            <div class="ig-card__head"><h3>Топ‑10 по просмотрам</h3><span class="ig-card__sub">наведите, чтобы увидеть детали</span></div>
+            <div class="ig-chart" id="chTopVideos"></div>
+          </div>
+          <div class="ig-card">
+            <div class="ig-card__head"><h3>Просмотры по дате публикации</h3><span class="ig-card__sub">каждая точка — одно видео</span></div>
+            <div class="ig-chart" id="chViewsByDate"></div>
+          </div>
+        </div>
+        <div class="ig-card ig-card--table">
+          <div class="ig-card__head"><h3>Все видео</h3><span class="ig-card__sub">кликните по заголовку столбца для сортировки</span></div>
+          <div class="ig-table-wrap"><table class="ig-table" id="videoTable"></table></div>
+        </div>
+      </section>
+
+      <p class="ig-foot">Данные Meta Graph API. Статистика аккаунта доступна за последние 30 дней, демография — при 100+ подписчиках. Метрика «просмотры» заменила impressions и plays с версии API 22.0.</p>
+    </div>
+
+    <div class="ig-loading" id="loading" hidden>
+      <div class="ig-loading__ring"></div>
+      <span id="loadingText">Загружаем данные…</span>
+    </div>
+  </main>
+
+  <div class="ig-tip" id="tip" hidden></div>
+
+  <script src="instagram.js"></script>
+</body>
+</html>

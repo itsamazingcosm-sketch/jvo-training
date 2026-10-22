@@ -1,0 +1,197 @@
+/* ============================================================
+   ДЖИВИО · Instagram аналитика — стили
+   Палитра и типографика из дизайн-системы JVO (см. styles.css)
+   ============================================================ */
+@font-face { font-family: 'Unbounded'; src: url('Unbounded.ttf') format('truetype'); font-weight: 200 900; font-display: swap; }
+@font-face { font-family: 'Manrope';   src: url('Manrope.ttf')   format('truetype'); font-weight: 300 800; font-display: swap; }
+
+:root {
+  --pink: #FF8FDA; --pink-light: #FFE4F6; --pink-pale: #FFCFEF;
+  --eggplant: #410031; --purple: #34034C; --purple-light: #EAD7FE;
+  --lime: #D8F995; --lime-pale: #EBF9C1; --lime-dark: #1F2A09;
+  --dark: #15181F; --white: #FFFFFF; --offwhite: #FBFBFB; --soft: #F2F3FA;
+  --ink: #410031; --ink-2: #15181F; --muted: #8A7C97; --muted-2: #9A8FA6; --border: #ECE3E9;
+  --display: 'Unbounded', system-ui, sans-serif;
+  --body: 'Manrope', system-ui, sans-serif;
+  --r-lg: 32px; --r-md: 22px; --r-sm: 14px;
+  --shadow-sm: 0 4px 20px rgba(65,0,49,.06);
+  --shadow-md: 0 18px 48px rgba(65,0,49,.12);
+  --shadow-pink: 0 18px 44px rgba(255,143,218,.32);
+  --ease: cubic-bezier(.22,1,.36,1);
+
+  /* Графики: категориальные слоты (проверены валидатором) */
+  --c1: #8A2272; --c2: #E0569F; --c3: #5E8C13; --c4: #2F6FD6;
+  --c-grid: #EEE8EC; --c-axis: #8A7C97; --c-dim: #D9D2D8;
+  --good: #2E7D32; --bad: #C62828;
+}
+
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+html { scroll-behavior: smooth; }
+body { margin: 0; font-family: var(--body); color: var(--ink-2); background: var(--offwhite); font-weight: 500; line-height: 1.5; -webkit-font-smoothing: antialiased; }
+a { color: inherit; text-decoration: none; }
+button { font-family: inherit; cursor: pointer; border: none; background: none; color: inherit; }
+img { max-width: 100%; display: block; }
+h1, h2, h3 { font-family: var(--display); color: var(--eggplant); margin: 0; }
+code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: .92em; background: var(--soft); padding: 1px 6px; border-radius: 6px; }
+
+/* ---------- Шапка ---------- */
+.ig-top { position: sticky; top: 0; z-index: 30; display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 14px 32px; background: var(--eggplant); color: #fff; }
+.ig-top__brand { display: flex; align-items: center; gap: 14px; }
+.ig-top__brand img { height: 26px; }
+.ig-top__sep { width: 1px; height: 22px; background: rgba(255,255,255,.25); }
+.ig-top__title { font-family: var(--display); font-weight: 600; font-size: 14px; letter-spacing: .01em; }
+.ig-top__status { display: flex; align-items: center; gap: 10px; font-size: 13.5px; color: rgba(255,255,255,.85); min-width: 0; }
+.ig-top__status img { width: 28px; height: 28px; border-radius: 50%; object-fit: cover; background: var(--pink-light); }
+.ig-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--lime); flex-shrink: 0; }
+.ig-dot--demo { background: var(--pink); }
+
+.ig-wrap { max-width: 1240px; margin: 0 auto; padding: 32px 32px 96px; }
+
+/* ---------- Кнопки / поля ---------- */
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 10px; padding: 14px 26px; border-radius: 999px; font-weight: 700; font-size: 15px; transition: transform .18s var(--ease), box-shadow .2s var(--ease), background .2s; }
+.btn--pink { background: var(--pink); color: var(--eggplant); box-shadow: var(--shadow-pink); }
+.btn--ghost { background: var(--white); color: var(--eggplant); box-shadow: var(--shadow-sm); border: 1px solid var(--border); }
+.btn--link { color: var(--muted); padding-left: 8px; padding-right: 8px; }
+.btn--link:hover { color: var(--eggplant); }
+.btn--sm { padding: 9px 18px; font-size: 13.5px; }
+.btn:hover { transform: translateY(-2px); }
+.btn:disabled { opacity: .6; transform: none; cursor: default; }
+
+.ig-field { display: flex; flex-direction: column; gap: 6px; font-size: 13px; font-weight: 700; color: var(--muted); }
+.ig-field input { font: inherit; font-weight: 500; font-size: 15px; color: var(--ink-2); background: #fff; border: 1px solid var(--border); border-radius: 999px; padding: 13px 18px; outline: none; transition: border-color .2s, box-shadow .2s; }
+.ig-field input:focus { border-color: var(--pink); box-shadow: 0 0 0 4px var(--pink-light); }
+
+/* ---------- Подключение ---------- */
+.ig-connect { display: grid; grid-template-columns: 1.1fr 1fr; gap: 40px; align-items: center; background: radial-gradient(120% 140% at 85% 0%, #5a0546 0%, var(--eggplant) 45%, #2e0023 100%); color: #fff; border-radius: var(--r-lg); padding: 48px 52px; margin-bottom: 32px; box-shadow: var(--shadow-md); }
+.ig-connect.is-compact { padding: 22px 28px; grid-template-columns: 1fr auto; gap: 20px; }
+.ig-connect.is-compact .ig-connect__text p, .ig-connect.is-compact .ig-connect__hint, .ig-connect.is-compact .ig-field { display: none; }
+.ig-connect.is-compact h1 { font-size: 20px; }
+.ig-connect h1 { color: #fff; font-size: 34px; font-weight: 700; line-height: 1.15; margin-bottom: 12px; }
+.ig-connect p { margin: 0; color: rgba(255,255,255,.82); font-size: 15.5px; max-width: 52ch; }
+.ig-connect__form { display: flex; flex-direction: column; gap: 14px; }
+.ig-connect__form .ig-field { color: rgba(255,255,255,.7); }
+.ig-connect__actions { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+.ig-connect__hint { font-size: 13px !important; color: rgba(255,255,255,.62) !important; max-width: none !important; }
+.ig-connect__hint a { text-decoration: underline; color: var(--pink); }
+.ig-connect__hint code { background: rgba(255,255,255,.12); color: #fff; }
+.ig-connect__error { margin: 0; padding: 12px 16px; border-radius: var(--r-sm); background: rgba(255,255,255,.1); border: 1px solid rgba(255,143,218,.5); font-size: 14px; color: #fff; }
+
+/* ---------- Фильтры ---------- */
+.ig-filters { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 28px; }
+.ig-seg { display: inline-flex; background: #fff; border: 1px solid var(--border); border-radius: 999px; padding: 4px; box-shadow: var(--shadow-sm); }
+.ig-seg button { padding: 7px 14px; border-radius: 999px; font-size: 13.5px; font-weight: 700; color: var(--muted); transition: background .2s, color .2s; }
+.ig-seg button:hover { color: var(--eggplant); }
+.ig-seg button.is-on { background: var(--eggplant); color: #fff; }
+.ig-select { display: inline-flex; align-items: center; gap: 8px; font-size: 13.5px; font-weight: 700; color: var(--muted); }
+.ig-select select { font: inherit; font-weight: 700; color: var(--eggplant); background: #fff; border: 1px solid var(--border); border-radius: 999px; padding: 8px 14px; box-shadow: var(--shadow-sm); outline: none; }
+.ig-filters__note { margin-left: auto; font-size: 13px; color: var(--muted); }
+
+/* ---------- Профиль ---------- */
+.ig-profile { display: flex; align-items: center; gap: 22px; background: #fff; border: 1px solid var(--border); border-radius: var(--r-lg); padding: 24px 28px; box-shadow: var(--shadow-sm); margin-bottom: 36px; flex-wrap: wrap; }
+.ig-profile__ava { width: 76px; height: 76px; border-radius: 50%; object-fit: cover; background: var(--pink-light); flex-shrink: 0; }
+.ig-profile__id { min-width: 0; flex: 1; }
+.ig-profile__name { font-family: var(--display); font-weight: 700; font-size: 22px; color: var(--eggplant); }
+.ig-profile__user { color: var(--muted); font-size: 14px; }
+.ig-profile__user a { color: var(--c1); font-weight: 700; }
+.ig-profile__bio { font-size: 14px; color: var(--ink-2); margin-top: 6px; max-width: 60ch; white-space: pre-line; }
+.ig-profile__nums { display: flex; gap: 16px 36px; flex-wrap: wrap; }
+.ig-profile__num { display: flex; flex-direction: column; }
+.ig-profile__num b { font-size: 34px; font-weight: 700; line-height: 1.1; color: var(--eggplant); }
+.ig-profile__num span { font-size: 13px; color: var(--muted); font-weight: 600; }
+.ig-profile__num.is-hero b { font-size: 48px; }
+
+/* ---------- Секции ---------- */
+.ig-sec-head { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; margin: 0 0 18px; flex-wrap: wrap; }
+.ig-sec-head h2 { font-size: 24px; font-weight: 700; }
+.ig-sec-head span { font-size: 13.5px; color: var(--muted); font-weight: 600; }
+section { margin-bottom: 40px; }
+
+/* ---------- KPI ---------- */
+.ig-kpis { display: grid; grid-template-columns: repeat(6, 1fr); gap: 14px; margin-bottom: 22px; }
+.ig-kpi { background: #fff; border: 1px solid var(--border); border-radius: var(--r-md); padding: 18px 20px 14px; box-shadow: var(--shadow-sm); display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.ig-kpi__label { font-size: 12.5px; font-weight: 700; color: var(--muted); }
+.ig-kpi__value { font-size: 28px; font-weight: 700; color: var(--eggplant); line-height: 1.1; }
+.ig-kpi__delta { font-size: 12.5px; font-weight: 700; color: var(--muted); display: inline-flex; align-items: center; gap: 4px; }
+.ig-kpi__delta.is-up { color: var(--good); }
+.ig-kpi__delta.is-down { color: var(--bad); }
+.ig-kpi__spark { margin-top: 8px; height: 28px; }
+.ig-kpi__spark svg { display: block; width: 100%; height: 28px; overflow: visible; }
+.ig-kpi--na .ig-kpi__value { color: var(--muted-2); font-size: 20px; }
+
+/* ---------- Карточки графиков ---------- */
+.ig-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+.ig-grid-2--wide { margin-bottom: 18px; }
+.ig-grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 18px; }
+.ig-card { background: #fff; border: 1px solid var(--border); border-radius: var(--r-lg); padding: 22px 24px 18px; box-shadow: var(--shadow-sm); min-width: 0; }
+.ig-card__head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-bottom: 14px; flex-wrap: wrap; }
+.ig-card__head h3 { font-size: 15px; font-weight: 700; }
+.ig-card__sub { font-size: 12.5px; color: var(--muted); font-weight: 600; }
+.ig-chart { position: relative; min-height: 200px; }
+.ig-chart.is-stale { opacity: .45; transition: opacity .2s; }
+.ig-chart svg { display: block; width: 100%; height: auto; overflow: visible; font-family: var(--body); }
+.ig-chart .tick { font-size: 11px; fill: var(--c-axis); font-variant-numeric: tabular-nums; }
+.ig-chart .grid { stroke: var(--c-grid); stroke-width: 1; }
+.ig-chart .lbl { font-size: 11.5px; font-weight: 700; fill: var(--ink-2); }
+.ig-chart .lbl--muted { fill: var(--muted); font-weight: 600; }
+.ig-chart .bar { transition: opacity .15s; }
+.ig-chart .bar.is-hover { opacity: .78; }
+.ig-chart .hit { fill: transparent; cursor: pointer; }
+.ig-chart .xhair { stroke: var(--c-axis); stroke-width: 1; opacity: 0; }
+.ig-chart .xhair.is-on { opacity: .6; }
+.ig-chart .pt { opacity: 0; }
+.ig-chart .pt.is-on { opacity: 1; }
+.ig-empty { display: flex; align-items: center; justify-content: center; min-height: 200px; color: var(--muted); font-size: 14px; text-align: center; padding: 20px; }
+.ig-legend { display: flex; gap: 14px; flex-wrap: wrap; margin-top: 10px; font-size: 12.5px; color: var(--muted); font-weight: 600; }
+.ig-legend i { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 6px; vertical-align: -1px; }
+
+/* ---------- Таблица видео ---------- */
+.ig-card--table { padding-bottom: 8px; }
+.ig-table-wrap { overflow-x: auto; margin: 0 -24px; padding: 0 24px; }
+.ig-table { width: 100%; border-collapse: collapse; font-size: 13.5px; min-width: 980px; }
+.ig-table th { text-align: left; font-size: 11.5px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; padding: 10px 10px; border-bottom: 1px solid var(--border); white-space: nowrap; cursor: pointer; user-select: none; }
+.ig-table th.num, .ig-table td.num { text-align: right; font-variant-numeric: tabular-nums; }
+.ig-table th.is-sort { color: var(--eggplant); }
+.ig-table th.is-sort::after { content: ' ↓'; }
+.ig-table td { padding: 10px 10px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+.ig-table td.num { white-space: nowrap; }
+.ig-table tr:last-child td { border-bottom: none; }
+.ig-table tr:hover td { background: #FFF8FD; }
+.ig-vid { display: flex; align-items: center; gap: 12px; min-width: 260px; }
+.ig-vid__thumb { width: 44px; height: 56px; border-radius: 8px; object-fit: cover; background: var(--soft); flex-shrink: 0; }
+.ig-vid__thumb--empty { display: flex; align-items: center; justify-content: center; color: var(--muted-2); font-size: 18px; }
+.ig-vid__cap { font-weight: 600; color: var(--ink-2); max-width: 320px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; display: block; }
+.ig-vid__meta { font-size: 12px; color: var(--muted); }
+.ig-vid__meta a { color: var(--c1); font-weight: 700; }
+.ig-kind { display: inline-block; padding: 2px 9px; border-radius: 999px; font-size: 11px; font-weight: 800; background: var(--pink-light); color: var(--eggplant); }
+.ig-kind--feed { background: var(--purple-light); color: var(--purple); }
+.ig-bar-cell { display: flex; align-items: center; gap: 8px; justify-content: flex-end; }
+.ig-bar-cell i { display: inline-block; height: 6px; border-radius: 3px; background: var(--c1); }
+
+/* ---------- Подвал / загрузка / тултип ---------- */
+.ig-foot { font-size: 12.5px; color: var(--muted); margin: 0; }
+.ig-loading { position: fixed; left: 50%; bottom: 28px; transform: translateX(-50%); display: flex; align-items: center; gap: 12px; background: var(--eggplant); color: #fff; padding: 12px 22px; border-radius: 999px; font-weight: 600; font-size: 14px; box-shadow: var(--shadow-md); z-index: 60; }
+.ig-loading__ring { width: 18px; height: 18px; border-radius: 50%; border: 2px solid rgba(255,255,255,.3); border-top-color: var(--pink); animation: spin .8s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.ig-tip { position: fixed; z-index: 70; pointer-events: none; background: var(--dark); color: #fff; padding: 10px 12px; border-radius: 12px; font-size: 12.5px; box-shadow: var(--shadow-md); max-width: 260px; }
+.ig-tip__t { font-weight: 700; color: rgba(255,255,255,.7); margin-bottom: 4px; font-size: 11.5px; }
+.ig-tip__row { display: flex; align-items: center; gap: 8px; }
+.ig-tip__row b { font-size: 14px; font-variant-numeric: tabular-nums; }
+.ig-tip__row span { color: rgba(255,255,255,.75); }
+.ig-tip__key { width: 12px; height: 2px; border-radius: 1px; flex-shrink: 0; }
+
+/* ---------- Адаптив ---------- */
+@media (max-width: 1100px) { .ig-kpis { grid-template-columns: repeat(3, 1fr); } .ig-grid-3 { grid-template-columns: 1fr; } }
+@media (max-width: 820px) {
+  .ig-top { padding: 12px 16px; } .ig-top__title { display: none; }
+  .ig-wrap { padding: 20px 16px 72px; }
+  .ig-connect { grid-template-columns: 1fr; padding: 30px 24px; gap: 22px; }
+  .ig-connect.is-compact { grid-template-columns: 1fr; }
+  .ig-connect h1 { font-size: 26px; }
+  .ig-grid-2 { grid-template-columns: 1fr; }
+  .ig-profile__nums { gap: 14px 28px; width: 100%; }
+  .ig-profile__num.is-hero b { font-size: 36px; } .ig-profile__num b { font-size: 26px; }
+  .ig-filters__note { margin-left: 0; width: 100%; }
+}
+@media (max-width: 520px) { .ig-kpis { grid-template-columns: 1fr 1fr; } .ig-kpi__value { font-size: 24px; } }
+@media (prefers-reduced-motion: reduce) { .btn:hover { transform: none; } .ig-loading__ring { animation: none; } }
